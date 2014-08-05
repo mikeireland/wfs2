@@ -1,0 +1,102 @@
+########################################################################
+# Makefile                                                             #
+#                                                                      #
+# Makefile for the server system.				       #
+#                                                                      #
+########################################################################
+#                                                                      #
+#     Center for High Angular Resolution Astronomy                     #
+# Georgia State University, Atlanta GA 30303-3083, U.S.A.              #
+#                                                                      #
+#                                                                      #
+# Telephone: 1-626-796-5405                                            #
+# Fax      : 1-626-796-6717                                            #
+# email    : theo@chara.gsu.edu                                        #
+# WWW      : http:www.chara.gsu.edu                                    #
+#                                                                      #
+# (C) This source code and its associated executable                   #
+# program(s) are copyright.                                            #
+#                                                                      #
+########################################################################
+#                                                                      #
+# Author : Theo ten Brummelaar                                         #
+# Date   : Aug 2012   						       #
+########################################################################
+
+# If you are going to change something it'll probably be here:
+
+CC= gcc
+CFLAGS= -g -O -Wall -pedantic -DC_GNU64=400 -DOS_LINUX_GNU
+#CFLAGS= -DUSE_RT -g -O -Wall -pedantic -DC_GNU64=400 -DOS_LINUX_GNU
+LFLAGS= -lepix -lclock -lsla -landor -lchara -lrwfits -lnrc -lserver -lsockman -lclient -lchara -lc -lm -lz
+LIBDIR=/usr/local/lib
+INCDIR=/usr/local/include ../include
+BINDIR=/usr/local/bin
+ETCDIR=/ctrscrut/chara/etc
+HELPDIR=/usr/local/lib/ui_help
+LIBNAME=wfs
+
+# Add any new targets here:
+
+OFILES= \
+	wfs_server.o\
+	wfs_messages.o\
+	wfs_andor.o\
+	wfs_andor_usb_data.o\
+        wfs_andor_camera_link.o\
+	wfs_data.o
+
+#
+# Rule for compiling and adding a unit to the library
+#
+
+.c.o:
+		$(CC) $(CFLAGS) -c $<
+		
+#
+# Master target
+#
+
+all: wfs_server test_andor
+
+#
+# All routines depend on the header file
+#
+
+$(OFILES): wfs_server.h 
+
+#
+# Main routines
+#
+
+wfs_server: $(OFILES)
+	$(CC) $(CFLAGS) -o wfs_server $(OFILES) $(LFLAGS)
+
+test_andor: test_andor.c
+	$(CC) $(CFLAGS) -o test_andor test_andor.c -landor -lc -lm 
+
+#
+# Rule for cleaning up the directory
+#
+
+clean: 
+	rm -f $(OFILES) wfs_server core parsengc ngc.h image.bmp image.fit \
+		test_andor test_andor.o
+
+#
+# Rule for installation
+#
+
+install: wfs_server
+	cp wfs_server $(BINDIR)/wfs_server
+	chown observe $(BINDIR)/wfs_server
+	chgrp chara $(BINDIR)/wfs_server
+	chmod a+x $(BINDIR)/wfs_server
+	chmod a+s $(BINDIR)/wfs_server
+
+#
+# Rule for uninstalling
+#
+
+uninstall:
+	rm -f $(BINDIR)/wfs_server
