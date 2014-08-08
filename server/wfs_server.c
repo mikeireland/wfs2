@@ -35,9 +35,13 @@ char wfs_name[256];
 int  scope_number = S1;
 struct s_wfs_andor_setup andor_setup;
 struct s_wfs_status wfs_status;
-at_u16 *usb_image = NULL;
+at_u16 *image_data = NULL;
 bool save_fits = FALSE;
 bool use_cameralink = TRUE;
+int number_of_processed_frames = 0;
+float **data_frame = NULL;
+float **dark_frame = NULL;
+float data_threshhold = 0;
 
 int main(int argc, char **argv)
 {

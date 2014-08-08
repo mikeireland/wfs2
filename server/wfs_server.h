@@ -74,9 +74,13 @@ extern char wfs_name[256];
 extern int  scope_number;
 extern struct s_wfs_andor_setup andor_setup;
 extern struct s_wfs_status wfs_status;
-extern at_u16 *usb_image;
+extern at_u16 *image_data;
 extern bool save_fits;
 extern bool use_cameralink;
+extern int number_of_processed_frames;
+extern float **data_frame;
+extern float **dark_frame;
+extern float data_threshhold;
 
 /* Prototypes */
 

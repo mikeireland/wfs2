@@ -619,7 +619,6 @@ int andor_setup_camera(struct s_wfs_andor_setup setup)
 
 	/* Now set the crop mode */
 
-#warning Maybe enble turning this on or off?
 	if (setup.amplifier == ANDOR_EMCCD)
 	{
 	    if (andor_set_crop_mode(setup.image.vend, setup.image.hend, 
@@ -747,7 +746,7 @@ int andor_close(void)
 	}
 	error(MESSAGE,"Andor: shutdown.");
 
-	if (usb_image != NULL) free(usb_image);
+	if (image_data != NULL) free(image_data);
 
 	andor_is_open = FALSE;
 
@@ -1055,12 +1054,12 @@ int andor_set_image(struct s_wfs_andor_image image)
 
 	    /* Allocate memory for the images */
 
-	    if (usb_image != NULL) free(usb_image);
+	    if (image_data != NULL) free(image_data);
 
 #warning We should also setup the matrix or 2D array here for float data.
-	    usb_image = malloc(andor_setup.npix * sizeof(*usb_image));
+	    image_data = malloc(andor_setup.npix * sizeof(*image_data));
 
-	    if (usb_image == NULL) error(FATAL,"Ran out of memory.");
+	    if (image_data == NULL) error(FATAL,"Ran out of memory.");
 
 	    /* Tell the user about this */
 
@@ -1406,10 +1405,10 @@ int andor_wait_for_idle(int timeout)
 
 int andor_get_acquired_data(void)
 { 
-	if (usb_image == NULL) return 
+	if (image_data == NULL) return 
 	    error(ERROR,"Andor: Tried to collect data with no image memory.");
 
-	switch(GetAcquiredData16(usb_image, andor_setup.npix))
+	switch(GetAcquiredData16(image_data, andor_setup.npix))
 	{
 		case DRV_SUCCESS: break;
 
@@ -1882,10 +1881,10 @@ int andor_get_total_number_images_acquired(void)
 
 int andor_get_oldest_image(void)
 { 
-	if (usb_image == NULL) return 
+	if (image_data == NULL) return 
 	    error(ERROR,"Andor: Tried to collect data with no image memory.");
 
-	switch(GetOldestImage16(usb_image, andor_setup.npix))
+	switch(GetOldestImage16(image_data, andor_setup.npix))
 	{
 		case DRV_SUCCESS: break;
 

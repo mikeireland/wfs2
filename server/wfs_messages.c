@@ -342,7 +342,7 @@ int message_wfs_andor_current_frame(struct smessage *message)
 
 	/* This too must be done with the mutex locked. */
 
-	for(p2 = usb_image, p1 = values, i=0;
+	for(p2 = image_data, p1 = values, i=0;
 	    i < andor_setup.npix;
 	    i++, p1++, p2++) *p1 = (unsigned short int)*p2;
 	unlock_usb_mutex();

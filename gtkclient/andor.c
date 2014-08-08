@@ -258,10 +258,11 @@ void andor_setup_update(void)
 	sprintf(s,"Missed FPS: %.2f", andor_setup.missed_frames_per_second);
 	gtk_label_set_text((GtkLabel *) missed_frames_label, s);
 
-	sprintf(s,"Cam %.1f Usb %.1f CL %.1f", 
+	sprintf(s,"Cam %.0f Usb %.0f CL %.0f Miss %.0f", 
 			andor_setup.cam_frames_per_second,
 			andor_setup.usb_frames_per_second,
-			andor_setup.camlink_frames_per_second);
+			andor_setup.camlink_frames_per_second,
+			andor_setup.missed_frames_per_second);
 	gtk_label_set_text((GtkLabel *) fps_label, s);
 
 } /* andor_setup_update() */
@@ -291,17 +292,17 @@ void fill_andor_setup_page(GtkWidget *vbox)
 
         running_label = gtk_label_new("Running: ???");
         gtk_box_pack_start(GTK_BOX(hbox), running_label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (running_label, WFS_WIDTH/4, WFS_HEIGHT);
+        gtk_widget_set_usize (running_label, 3*WFS_WIDTH/16, WFS_HEIGHT);
         gtk_widget_show(running_label);
 
         shutter_label = gtk_label_new("Shutter: ???");
         gtk_box_pack_start(GTK_BOX(hbox), shutter_label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (shutter_label, WFS_WIDTH/4, WFS_HEIGHT);
+        gtk_widget_set_usize (shutter_label, 3*WFS_WIDTH/16, WFS_HEIGHT);
         gtk_widget_show(shutter_label);
 
         fps_label = gtk_label_new("FPS: ???");
         gtk_box_pack_start(GTK_BOX(hbox), fps_label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (fps_label, WFS_WIDTH/4, WFS_HEIGHT);
+        gtk_widget_set_usize (fps_label, 3*WFS_WIDTH/8, WFS_HEIGHT);
         gtk_widget_show(fps_label);
 
 	button = gtk_button_new_with_label ("GET");

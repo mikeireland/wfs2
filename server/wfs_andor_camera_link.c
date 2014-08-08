@@ -26,6 +26,7 @@
 /* Date   : Aug 2012							*/
 /************************************************************************/
 
+#warning CAMLINK is not reliable, but the issue is not the new or old code.
 #include "wfs_server.h"
 #include <cext.h>     
 #include <pximage.h>           
@@ -39,8 +40,6 @@
 #include <sched.h>
 #include <sys/mman.h>
 
-static int number_of_camlink_frames = 0;
-static int camlink_missed_frames = 0;
 static time_t start_time_of_camlink_frames = 0;
 static bool camlink_thread_running = FALSE;
 static pthread_t camlink_thread;
@@ -53,8 +52,11 @@ static int fieldirqcount = 0;
 #define UNITS	1
 #define UNITSMAP	((1<<UNITS)-1)
 #define DRIVERPARMS ""
-#define FORMATFILE    "/ctrscrut/chara/etc/wfs.fmt"
+#warning FORMAT FILE HAS 84x84 NOT 90x90
+//#define FORMATFILE    "/ctrscrut/chara/etc/wfs.fmt"
+#define FORMATFILE    "./wfs.fmt"
 
+#warning We can probably remove the RT stuff completly
 #ifdef USE_RT
 
 #warning Compiling code for Pre-emptive RT Kernel.
@@ -104,6 +106,7 @@ int andor_start_camlink_thread(void)
 {
 	char	s[256];
 	int	i;
+	int     buffers, boards, xdim, ydim, colors, bpp;
 
 	/* First open the camera link device */
 
@@ -121,6 +124,27 @@ int andor_start_camlink_thread(void)
                 error(FATAL, "Camera Link Open Error %d: %s", i,s);
         }
 	
+	/* Find out what we know about the camera */
+
+        buffers = pxd_imageZdim();
+        boards = pxd_infoUnits();
+        xdim = pxd_imageXdim();
+        ydim = pxd_imageYdim();
+        colors = pxd_imageCdim();
+        bpp = pxd_imageCdim()*pxd_imageBdim();
+
+        /* Tell user if we have to */
+
+        if (verbose)
+        {
+                error(MESSAGE, "Image frame buffers : %d", buffers);
+                error(MESSAGE, "Number of boards    : %d", boards);
+                error(MESSAGE, "xdim                : %d", xdim);
+                error(MESSAGE, "ydim                : %d", ydim);
+                error(MESSAGE, "colors              : %d", colors);
+                error(MESSAGE, "bits per pixel      : %d", bpp);
+        }
+
 	/* Create the thread */
 
         if (pthread_mutex_init(&camlink_mutex, NULL) != 0)
@@ -128,12 +152,12 @@ int andor_start_camlink_thread(void)
                 return error(ERROR, "Unable to create camlink mutex.");
         }
 
-        camlink_thread_running = TRUE;
         if (pthread_create(&camlink_thread, NULL, 
 		andor_camlink_thread, NULL) != 0)
         {
                 return error(ERROR, "Error creating CAMERA_LINK thread.");
         }
+        camlink_thread_running = TRUE;
 
 	error(MESSAGE,"Setup CAMERA_LINK thread complete.");
 
@@ -192,10 +216,11 @@ int andor_start_camlink(void)
 	/* Initialize the globals */
 
 	lock_camlink_mutex();
-	number_of_camlink_frames = 0;
+	number_of_processed_frames = 0;
 	andor_setup.camlink_frames_per_second = 0.0;
+	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
-	camlink_missed_frames = 0;
+	andor_setup.processed_frames_per_second = 0.0;
 
 	/* Wait for the camera to be idle */
 
@@ -211,7 +236,6 @@ int andor_start_camlink(void)
 	start_time_of_camlink_frames = time(NULL);
 	while(time(NULL) <= start_time_of_camlink_frames);
 	start_time_of_camlink_frames = time(NULL);
-	first_number_camlink_images = pxd_videoFieldCount(1);
 
 	/* Start the camera link and the camera going */
 
@@ -228,12 +252,21 @@ int andor_start_camlink(void)
                 return ERROR;
 	}
 
+	/* How many images are we starting with? */
+
+	first_number_camlink_images = pxd_videoFieldCount(1);
+
+        /* Go get the first one. */
+
+        pxd_doSnap(UNITSMAP, 1, 0);
+
 	/* That should be all */
 
 	andor_setup.camlink_running = TRUE;
 	unlock_camlink_mutex();
 
-	if (verbose) error(MESSAGE,"Andor CAMERA_LINK data collection started.");
+	if (verbose) 
+		error(MESSAGE,"Andor CAMERA_LINK data collection started.");
 
 	return andor_send_setup();
 
@@ -260,6 +293,10 @@ int andor_stop_camlink(void)
 
 	if (andor_setup.running) andor_abort_acquisition();
 
+        /* Wait a while for this to trickle through */
+
+        usleep(100000);
+
 	/* Stop listening with teh camera link */;
 
 	if (andor_set_camera_link(0) != NOERROR)
@@ -271,13 +308,16 @@ int andor_stop_camlink(void)
 	/* Update globals */
 
 	andor_setup.camlink_frames_per_second = 0.0;
+	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
-	camlink_missed_frames = 0;
+	andor_setup.processed_frames_per_second = 0.0;
+	andor_setup.missed_frames_per_second = 0;
 	fieldirqcount = 0;
 
 	/* That should be all */
 
-	if (verbose) error(MESSAGE,"Andor CAMERA_LINK data collection stopped.");
+	if (verbose) 
+		error(MESSAGE,"Andor CAMERA_LINK data collection stopped.");
 
 	return andor_send_setup();
 
@@ -290,16 +330,15 @@ int andor_stop_camlink(void)
 /* possible Return error level.						*/
 /************************************************************************/
 
-#warning Work out what is different between this version and the new one.
 void *andor_camlink_thread(void *arg)
 {
+	int number_of_camlink_frames = 0;
 	static time_t last_camlink_fps_time = 0;
-	static int last_total_camlink_images = 0;
-	static int last_number_camlink_images = 0;
-	static int last_number_camlink_frames = 0;
+	static int last_number_camlink_images = 0; // Hardware
+	static int last_number_camlink_frames = 0; // Processed
 	time_t now;
 	int this_number_camlink_images = 0;
-	int i;
+	int i, n;
 	char	s[256];
 #ifdef USE_RT
 	struct timespec rt_time;
@@ -354,6 +393,7 @@ void *andor_camlink_thread(void *arg)
 #else
 			usleep(1000);
 #endif
+			continue; 
 		}
 
 		/* Is there any data to get? */
@@ -367,7 +407,7 @@ void *andor_camlink_thread(void *arg)
 
 		/* Is there something new? */
 
-		if (this_number_camlink_images == last_total_camlink_images)
+		if (this_number_camlink_images == last_number_camlink_images)
 		{
 			unlock_camlink_mutex();
 #ifdef USE_RT
@@ -387,19 +427,23 @@ void *andor_camlink_thread(void *arg)
 
 		/* This is a new one. */
 
-		last_total_camlink_images = this_number_camlink_images;
+		n = this_number_camlink_images - last_number_camlink_images;
+		last_number_camlink_images = this_number_camlink_images;
 
 		/* OK, go get the data */
 
-		if ((i = pxd_readushort(UNITSMAP, /* Which unit? */
+		for(i=0; i< n ; i++)
+		{
+		    pxd_doSnap(UNITSMAP, 1, 0);
+		    if ((i = pxd_readushort(UNITSMAP, /* Which unit? */
 			1,                       /* Which frame buffer? */
 			0, 0,                    /* Upper left corner */
 			andor_setup.npixx,
 			andor_setup.npixy,     /* Lower right corner or whole*/
-			usb_image,        /* Where to put it */
+			image_data,        /* Where to put it */
 			sizeof(short)*andor_setup.npix,/* How big the buffer */
 			"Grey")) != andor_setup.npix)
-		{
+		    {
 			pxd_mesgFaultText(UNITSMAP, s, 256);
 			error(ERROR,"Camera link error %d != %d - %s",
 					i, andor_setup.npix, s);
@@ -414,13 +458,26 @@ void *andor_camlink_thread(void *arg)
 				rt_time.tv_sec++;
 			}
 #endif
-			continue;
+		    }
+		    else
+		    {
+
+		  	/* OK, we got one more CAMERA_LINK frame */
+
+		  	++number_of_camlink_frames;
+
+			/* Here is the place holder call for the WFS */
+
+			process_data(chara_time_now(), 
+				andor_setup.npixx, 
+				andor_setup.npixy, 
+				image_data);
+		    }
+
+		    /* Give other threads some time */
+
+		    usleep(500);
 		}
-		pxd_doSnap(UNITSMAP, 1, 0);
-
-		/* OK, we got one more CAMERA_LINK frame */
-
-		++number_of_camlink_frames;
 
 		/* Is it time to make a new calculation? */
 
@@ -430,22 +487,12 @@ void *andor_camlink_thread(void *arg)
 
 		    andor_setup.camlink_frames_per_second = 
 			number_of_camlink_frames-last_number_camlink_frames;
-		    andor_setup.cam_frames_per_second = 
-			this_number_camlink_images - last_number_camlink_images;
 		    andor_setup.missed_frames_per_second = 
 			andor_setup.cam_frames_per_second - 
 			andor_setup.camlink_frames_per_second;
 
 		    last_number_camlink_frames = number_of_camlink_frames;
-		    last_number_camlink_images = this_number_camlink_images;
-		}
-
-		/* Here is the place holder call for the WFS */
-
-		if (andor_setup.npixx == 90 && andor_setup.npixy == 90)
-		{
-#warning WE HAVE 90x90 WIRED IN
-			process_data(chara_time_now(), 90, 90, usb_image);
+		    number_of_camlink_frames = 0;
 		}
 
 		/* That should be all */
@@ -476,6 +523,7 @@ void *andor_camlink_thread(void *arg)
 
 void lock_camlink_mutex(void)
 {
+#warning Note that we are ignoring the mutex completely
         //pthread_mutex_lock(&camlink_mutex);
 
 } /* lock_camlink_mutex() */

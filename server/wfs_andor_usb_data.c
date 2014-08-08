@@ -29,7 +29,6 @@
 #include "wfs_server.h"
 
 static int number_of_usb_frames = 0;
-static int usb_missed_frames = 0;
 static time_t start_time_of_usb_frames = 0;
 static bool usb_thread_running = FALSE;
 static pthread_t usb_thread;
@@ -110,10 +109,10 @@ int andor_start_usb(void)
 
 	lock_usb_mutex();
 	number_of_usb_frames = 0;
+	number_of_processed_frames = 0;
 	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
 	andor_setup.missed_frames_per_second = 0.0;
-	usb_missed_frames = 0;
 	last_number_usb_images = 0;
 
 	/* Wait for the camera to be idle */
@@ -181,7 +180,6 @@ int andor_stop_usb(void)
 	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
 	andor_setup.missed_frames_per_second = 0.0;
-	usb_missed_frames = 0;
 
 	/* That should be all */
 
@@ -200,8 +198,11 @@ int andor_stop_usb(void)
 
 void *andor_usb_thread(void *arg)
 {
-	time_t dt;
-	int this_number_usb_images = 0;
+					 // These from begining of time
+	int this_number_usb_images = 0;	 // #Images reported by harware
+	int number_of_usb_images = 0;	 // last #Images reported by harware
+					 // These for each second
+	int last_number_usb_count = 0;	 // last #Images reported by harware
 	int n;
 	int i;
 	int year, month, day, doy;
@@ -211,9 +212,15 @@ void *andor_usb_thread(void *arg)
 	error(MESSAGE,"Entering USB Thread.");
 	while(usb_thread_running)
 	{
-		/* Do we need to do anything? */
+		/* 
+		 * Do we need to do anything?
+		 * We should always empty the USB data
+		 * even if camera link is running as it is always sent
+		 * and we don't wish to have problems with over-full
+		 * buffers.
+		 */
 
-		if (!andor_setup.running || !andor_setup.usb_running)
+		if (!andor_setup.running)
 		{
 			usleep(1000);
 			continue;
@@ -286,37 +293,45 @@ void *andor_usb_thread(void *arg)
 
 		    ++number_of_usb_frames;
 
-		    /* Here is the place holder call for the WFS */
 
-#warning THIS HAS 90x90 WIRED IN.
-		    if (andor_setup.npixx == 90 && andor_setup.npixy == 90)
+		    /* Process this if required */
+
+		    if (andor_setup.usb_running)
 		    {
-			process_data(chara_time_now(), 90, 90, usb_image);
+			process_data(chara_time_now(), 
+				andor_setup.npixx, 
+				andor_setup.npixy, 
+				image_data);
+		    }
+		    else
+		    {
+			    /* Make some room for the other threads */
+			
+			    usleep(500);
 		    }
 		}
 
 		/* Is it time to make a new calculation? */
 
-		if ((dt = time(NULL)) > last_fps_time)
+		if (time(NULL) > last_fps_time)
 		{
-		        /* Do frames per second calculation */
+		    /* Do frames per second calculation */
 
-		        last_fps_time = dt;
-		        dt -= start_time_of_usb_frames;
-			usb_missed_frames = this_number_usb_images - 
-					    number_of_usb_frames;
+		    last_fps_time = time(NULL);
 
-		        if (dt > 0)
-		        {
-			    andor_setup.usb_frames_per_second = 
-				(float)number_of_usb_frames / (float) dt;
-			    andor_setup.cam_frames_per_second = 
-				(float)this_number_usb_images / (float) dt;
-			    andor_setup.missed_frames_per_second = 
-				(float)usb_missed_frames / (float) dt;
-		        }
+		    andor_setup.usb_frames_per_second = number_of_usb_frames;
+		    andor_setup.cam_frames_per_second = 
+				this_number_usb_images - last_number_usb_count;
+		    if (andor_setup.usb_running)
+		    {
+		        andor_setup.missed_frames_per_second = 
+				andor_setup.cam_frames_per_second -
+				andor_setup.usb_frames_per_second;
+		    }
+
+		    number_of_usb_frames = 0;
+		    last_number_usb_count = this_number_usb_images;
 		 }
-
 
 		/* That should be all */
 
