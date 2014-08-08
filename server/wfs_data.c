@@ -39,8 +39,20 @@
 
 void process_data(long time_stamp, int nx, int ny, unsigned short int *ccd)
 {
+	static time_t last_time = 0;
+
 	/* OK, we have processed one more frame. */
 
 	number_of_processed_frames++;
+
+	/* Is it time to check things out? */
+
+	if (time(NULL) > last_time)
+	{
+		andor_setup.processed_frames_per_second = 
+			number_of_processed_frames;
+		number_of_processed_frames = 0;
+		last_time = time(NULL);
+	}
 
 } /* process_data() */

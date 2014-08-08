@@ -150,6 +150,8 @@ int message_wfs_andor_update_setup(int server, struct smessage *mess)
 	andor_setup.cam_frames_per_second = new_setup->cam_frames_per_second;
 	andor_setup.camlink_frames_per_second=
 		new_setup->camlink_frames_per_second;
+	andor_setup.processed_frames_per_second = 
+		new_setup->processed_frames_per_second;
 	andor_setup.missed_frames_per_second = 
 		new_setup->missed_frames_per_second;
 	andor_setup.temperature_status = new_setup->temperature_status;

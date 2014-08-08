@@ -261,19 +261,14 @@ int main(int argc, char **argv)
 
 	andor_start_usb_thread();
 
+	/* We always send Camera Link data anyway */
+
+	andor_set_camera_link(1);
+	error(MESSAGE,"Camera Link Turned on.");
+
 	/* Create the Cameralink thread */
 
-	if (use_cameralink)
-	{
-		andor_start_camlink_thread(); 
-	}
-	else
-	{
-		/* We send Camera Link data anyway */
-
-		andor_set_camera_link(1);
-		error(MESSAGE,"Camera Link Turned on.");
-	}
+	if (use_cameralink) andor_start_camlink_thread(); 
 
 	/* Had over control */
 
@@ -382,6 +377,8 @@ int wfs_periodic_job(void)
 				andor_setup.camlink_frames_per_second);
 			error(MESSAGE,"CAM FPS = %.2f.",
 				andor_setup.cam_frames_per_second);
+			error(MESSAGE,"PRC FPS = %.2f.",
+				andor_setup.processed_frames_per_second);
 		}
 	}
 

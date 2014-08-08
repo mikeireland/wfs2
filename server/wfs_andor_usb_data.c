@@ -102,14 +102,10 @@ int andor_start_usb(void)
 	if (andor_setup.usb_running) return error(ERROR,
 		"The camera is already running in USB mode.");
 
-	if (andor_setup.camlink_running) return error(ERROR,
-		"The camera is already running in CAMERA LINK mode.");
-
 	/* Initialize the globals */
 
 	lock_usb_mutex();
 	number_of_usb_frames = 0;
-	number_of_processed_frames = 0;
 	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
 	andor_setup.missed_frames_per_second = 0.0;
@@ -179,6 +175,7 @@ int andor_stop_usb(void)
 
 	andor_setup.usb_frames_per_second = 0.0;
 	andor_setup.cam_frames_per_second = 0.0;
+	andor_setup.processed_frames_per_second = 0.0;
 	andor_setup.missed_frames_per_second = 0.0;
 
 	/* That should be all */
@@ -200,9 +197,7 @@ void *andor_usb_thread(void *arg)
 {
 					 // These from begining of time
 	int this_number_usb_images = 0;	 // #Images reported by harware
-	int number_of_usb_images = 0;	 // last #Images reported by harware
-					 // These for each second
-	int last_number_usb_count = 0;	 // last #Images reported by harware
+	int last_number_usb_count = 0; // For tracking data rate
 	int n;
 	int i;
 	int year, month, day, doy;
@@ -296,7 +291,7 @@ void *andor_usb_thread(void *arg)
 
 		    /* Process this if required */
 
-		    if (andor_setup.usb_running)
+		    if (!andor_setup.camlink_running)
 		    {
 			process_data(chara_time_now(), 
 				andor_setup.npixx, 
@@ -307,11 +302,10 @@ void *andor_usb_thread(void *arg)
 		    {
 			    /* Make some room for the other threads */
 			
+#warning I wonder about this usleep and some others
 			    usleep(500);
 		    }
 		}
-
-		/* Is it time to make a new calculation? */
 
 		if (time(NULL) > last_fps_time)
 		{

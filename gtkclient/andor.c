@@ -258,11 +258,11 @@ void andor_setup_update(void)
 	sprintf(s,"Missed FPS: %.2f", andor_setup.missed_frames_per_second);
 	gtk_label_set_text((GtkLabel *) missed_frames_label, s);
 
-	sprintf(s,"Cam %.0f Usb %.0f CL %.0f Miss %.0f", 
+	sprintf(s,"Cam %.0f Usb %.0f CL %.0f Proc %.0f", 
 			andor_setup.cam_frames_per_second,
 			andor_setup.usb_frames_per_second,
 			andor_setup.camlink_frames_per_second,
-			andor_setup.missed_frames_per_second);
+			andor_setup.processed_frames_per_second);
 	gtk_label_set_text((GtkLabel *) fps_label, s);
 
 } /* andor_setup_update() */
