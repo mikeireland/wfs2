@@ -41,16 +41,18 @@ char do_local_display = TRUE;
 #ifdef GTK2
 int main_page = -1;
 int andor_setup_page = -1;
+int wfs_page = -1;
 #endif
 GtkWidget *notebook = NULL;
 struct s_wfs_andor_setup andor_setup;
-struct s_wfs_status wfs_status;
 char engineering_mode = FALSE;
 char got_andor_setup;
 char server_name[256];
 GtkWidget *temp_label;
 int send_ready_for_display = FALSE;
 int movie_running = FALSE;
+struct s_wfs_subap_centroids subap_centroids_ref;
+struct s_wfs_subap_centroids subap_centroids;
 
 int main(int  argc, char *argv[] )
 {
@@ -218,6 +220,20 @@ int main(int  argc, char *argv[] )
         /* And fill things out. */
 
         fill_andor_setup_page(vbox);
+
+	/* The WFS Page */
+
+        vbox = gtk_vbox_new(FALSE, 0);
+        label = gtk_label_new("WFS");
+#ifdef GTK2
+        wfs_page =
+#endif
+                gtk_notebook_append_page((GtkNotebook *)notebook,
+                vbox, label);
+
+        /* And fill things out. */
+
+        fill_wfs_page(vbox);
 
 	/* Some buttons for the bottom of all pages */
 

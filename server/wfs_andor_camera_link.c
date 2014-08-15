@@ -182,9 +182,6 @@ int andor_start_camlink(void)
 	if (!use_cameralink) return error(ERROR,
 		"The Camera link interface is disabled.");
 
-	if (andor_setup.usb_running) return error(ERROR,
-		"The camera is already running in USB mode.");
-
 	if (andor_setup.camlink_running) return error(ERROR,
 		"The camera is already running in CAMERA LINK mode.");
 
@@ -257,16 +254,20 @@ void *andor_camlink_thread(void *arg)
 	int this_number_camlink_images = 0;
 	int i, n;
 	char	s[256];
+	int	run_count = 0;
+	int	last_run_count = 0;
 
 	error(MESSAGE,"Entering CAMERA_LINK Thread.");
 
 	while(camlink_thread_running)
 	{
+		run_count++;
+
 		/* Do we need to do anything? */
 
 		if (!andor_setup.running || !andor_setup.camlink_running)
 		{
-			usleep(1000);
+			usleep(100);
 			continue; 
 		}
 
@@ -283,6 +284,7 @@ void *andor_camlink_thread(void *arg)
 		if (this_number_camlink_images == last_number_camlink_images)
 		{
 			unlock_camlink_mutex();
+			usleep(100);
 			continue;
 		}
 
@@ -293,8 +295,8 @@ void *andor_camlink_thread(void *arg)
 
 		/* OK, go get the data */
 
-		for(i=0; i< n ; i++)
-		{
+		//for(i=0; i< n ; i++)
+		//{
 		    pxd_doSnap(UNITSMAP, 1, 0);
 		    if ((i = pxd_readushort(UNITSMAP, /* Which unit? */
 			1,                       /* Which frame buffer? */
@@ -325,7 +327,9 @@ void *andor_camlink_thread(void *arg)
 		    }
 
 		    /* Give other threads some time */
-		}
+
+		    usleep(100);
+		//}
 
 		/* Is it time to make a new calculation? */
 
@@ -340,6 +344,10 @@ void *andor_camlink_thread(void *arg)
 			andor_setup.camlink_frames_per_second;
 
 		    number_of_camlink_frames = 0;
+
+		    printf("Run count %d %d\n", run_count, run_count - last_run_count);
+		    fflush(stdout);
+			last_run_count = run_count;
 		}
 
 		/* That should be all */

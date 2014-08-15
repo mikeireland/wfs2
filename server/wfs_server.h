@@ -42,6 +42,7 @@
 #include <chara.h>
 #include <zlib.h>
 #include <pthread.h>
+#include <nrc.h>
 
 /* Which camera do we use? */
 
@@ -69,18 +70,33 @@
 
 #define WFS_PERIODIC			1
 
+#define REF_CENTROID_FILENAME          "reference_centroids.dat"
+
+#define DFT_SUBAP_SIZE			9
+
+/* macro */
+
+#define min(a,b)                        (((a)<(b))?(a):(b))
+#define max(a,b)                        (((a)>(b))?(a):(b))
+
 extern bool verbose;
 extern char wfs_name[256];
 extern int  scope_number;
 extern struct s_wfs_andor_setup andor_setup;
-extern struct s_wfs_status wfs_status;
 extern at_u16 *image_data;
 extern bool save_fits;
 extern bool use_cameralink;
 extern int number_of_processed_frames;
 extern float **data_frame;
 extern float **dark_frame;
-extern float data_threshhold;
+extern float **calc_dark_frame;
+extern int dark_frame_num;
+extern float **raw_frame;
+extern float **sum_frame;
+extern int sum_frame_num;
+extern float data_threshold;
+extern struct s_wfs_subap_centroids subap_centroids_ref;
+extern struct s_wfs_subap_centroids subap_centroids;
 
 /* Prototypes */
 
@@ -91,6 +107,8 @@ void close_function(void);
 int wfs_top_job(void);
 int wfs_periodic_job(void);
 void print_usage_message(char *name);
+int wfs_write_ref_centroids(void);
+int wfs_load_ref_centroids(void);
 
 /* wfs_messages.c */
 
@@ -164,6 +182,10 @@ void unlock_usb_mutex(void);
 /* wfs_data.c */
 
 void process_data(long time_stamp, int nx, int ny, unsigned short int *data);
+int message_wfs_take_background(struct smessage *message);
+int message_wfs_reset_background(struct smessage *message);
+int message_wfs_set_threshold(struct smessage *message);
+int message_wfs_set_num_frames(struct smessage *message);
 
 /* wfs_andor_camlink_data.c */
 

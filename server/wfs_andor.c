@@ -84,6 +84,8 @@ int andor_open(int iSelectedCamera, struct s_wfs_andor_image image,
 		"Andor:GetAvailableCameras():Failed to get number of cameras.");
 	}
 
+	if (verbose) error(MESSAGE, "Found %d cameras", lNumCameras);
+
 	/* Have we asked for an existing camera? */
 
 	if (iSelectedCamera >= lNumCameras)
@@ -154,6 +156,8 @@ int andor_open(int iSelectedCamera, struct s_wfs_andor_image image,
 		case DRV_ERROR_NOCAMERA: return error(ERROR,
 			"Andor:Initialize(): No camera found.");
 	}
+
+	if (verbose) error(MESSAGE, "Camera Initialized");
 
 	/* Wait for this to happen */
 
@@ -382,6 +386,7 @@ int andor_open(int iSelectedCamera, struct s_wfs_andor_image image,
 
 	if (use_cameralink)
 	{
+	    error(MESSAGE,"Really?");
 	    switch(SetCameraLinkMode(DFT_ANDOR_CAMERA_LINK))
 	    {
 		case DRV_SUCCESS: break;
@@ -953,6 +958,7 @@ int andor_set_shutter(int shutter)
 int andor_set_image(struct s_wfs_andor_image image)
 {
 	bool ok = FALSE;
+	int	i,j;
 
 	/* Are we collecting data right now? */
 
@@ -1041,12 +1047,23 @@ int andor_set_image(struct s_wfs_andor_image image)
 	}
 	else
 	{
+	    /* Release ememory */
+
+	    if (image_data != NULL) free(image_data);
+	    if (data_frame != NULL) free_matrix(data_frame, 
+			1, andor_setup.npixx, 1, andor_setup.npixy);
+	    if (dark_frame != NULL) free_matrix(dark_frame, 
+			1, andor_setup.npixx, 1, andor_setup.npixy);
+	    if (calc_dark_frame != NULL) free_matrix(calc_dark_frame, 
+			1, andor_setup.npixx, 1, andor_setup.npixy);
+	    if (raw_frame != NULL) free_matrix(raw_frame, 
+			1, andor_setup.npixx, 1, andor_setup.npixy);
+	    if (sum_frame != NULL) free_matrix(sum_frame, 
+			1, andor_setup.npixx, 1, andor_setup.npixy);
 	    /* 
 	     * We now know how many pixels we have
 	     * This should include the binning if we are using it.
 	     */
-
-#warning Have we got this binning thing right?
 
 	    andor_setup.npixx = (image.hend - image.hstart + 1)/image.hbin;
 	    andor_setup.npixy = (image.vend - image.vstart + 1)/image.vbin;
@@ -1054,12 +1071,24 @@ int andor_set_image(struct s_wfs_andor_image image)
 
 	    /* Allocate memory for the images */
 
-	    if (image_data != NULL) free(image_data);
-
-#warning We should also setup the matrix or 2D array here for float data.
 	    image_data = malloc(andor_setup.npix * sizeof(*image_data));
-
 	    if (image_data == NULL) error(FATAL,"Ran out of memory.");
+
+	    data_frame = matrix(1, andor_setup.npixx, 1, andor_setup.npixy);
+	    dark_frame = matrix(1, andor_setup.npixx, 1, andor_setup.npixy);
+	    calc_dark_frame = matrix(1, andor_setup.npixx,1,andor_setup.npixy);
+	    raw_frame = matrix(1, andor_setup.npixx, 1, andor_setup.npixy);
+	    sum_frame = matrix(1, andor_setup.npixx, 1, andor_setup.npixy);
+
+	    for(i=1; i <= andor_setup.npixx; i++)
+	    for(j=1; j <= andor_setup.npixy; j++)
+	    {
+		data_frame[i][j] = 0.0;
+		dark_frame[i][j] = 0.0;
+		calc_dark_frame[i][j] = 0.0;
+		sum_frame[i][j] = 0.0;
+		raw_frame[i][j] = 0.0;
+	    }
 
 	    /* Tell the user about this */
 

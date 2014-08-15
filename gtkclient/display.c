@@ -40,12 +40,12 @@ static int last_npixy = -1;
 
 int message_wfs_andor_current_frame(int server, struct smessage *mess)
 {
-        unsigned char *compressed_values;
-	unsigned short int *uncompressed_values;
+        unsigned short int  *compressed_values;
+	float *uncompressed_values;
 	char *picture;
 	uLongf  len, clen;
-	int	i,j,k,l;
-	unsigned short int *pi1;
+	int	i,j;
+	float   *pf1;
 	char	*pc1, *pc2;
 	float	max, min;
 	int	pixmult = 1;
@@ -74,7 +74,7 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	}
 
 	clen = mess->length;
-	len = andor_setup.npixx * andor_setup.npixy * sizeof(unsigned int) * 2;
+	len = andor_setup.npixx * andor_setup.npixy * sizeof(float) * 2;
 		
 	/* Allocate memory */
 
@@ -103,7 +103,7 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	/* Uncompress the data */
 
 	if (uncompress((unsigned char *)uncompressed_values, &len, 
-			compressed_values, clen) != Z_OK)
+			(unsigned char *)compressed_values, clen) != Z_OK)
 	{
 		print_status(ERROR,"Uncompress failure on image.\n");
 		free(compressed_values);
@@ -114,7 +114,7 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	
 	/* Does it come out right? */
 
-	if (len != andor_setup.npix * sizeof(unsigned short int))
+	if (len != andor_setup.npix * sizeof(float))
 	{
 		print_status(ERROR,
 			"Uncompressed size %d does not match frame size %d.\n",
@@ -147,8 +147,8 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 
 	/* Copy the data, J inverted for display reasons */
 
-	for(pi1 = uncompressed_values, j=andor_setup.npixy; j > 0; j--)
-	for(i = 1; i <= andor_setup.npixx; i++) values[i][j] = *pi1++;
+	for(pf1 = uncompressed_values, i = 1; i <= andor_setup.npixx; i++)
+	for(j = 1; j <= andor_setup.npixy; j++) values[i][j] = *pf1++;
 
 	/* OK, finished with the memory */
 
@@ -181,48 +181,28 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 			andor_setup.npixx*pixmult,andor_setup.npixy*pixmult,
 			theBitmapPad, 0);
 
-	/* FOR DEMONSTRATION ONLY - Show quads */
+	/* We need to add GREEN boxes */
 
-	if (andor_setup.npixx == 90 && andor_setup.npixy == 90)
+	for(i=0; i<subap_centroids_ref.num; i++)
 	{
-	    /* This shows the edges of teh quads */
-
-	    for(i=18; i<80 ; i+=18)
-	    {
-		overlay_line(90*pixmult, 90*pixmult, picture, 
-				i*pixmult, 0, 90*pixmult, 2, 0, PLOT_GREEN);
-		overlay_line(90*pixmult, 90*pixmult, picture, 
-				0, i*pixmult, 90*pixmult, 2, 1, PLOT_GREEN);
-	    }
-
-	    /* 
-	     * This shows the COG for each quad.
-	     * Note that I am not sure i have the right corespondence
-	     * betwen COG and quads here. You'll need optics to find
-	     * out if I got that right.
-	     * It looks right but htere are too many sign changes going
-	     * on here. It has to be right in the server *and* here.
-	     * I doubt very much that it is.
-	     */
-
-	    for(i=0; i<5; i++)
-	    for(j=0; j<5; j++)
-	    {
-		/* Offset from start of cell on screen */
-
-		k = (int)((wfs_status.cog_x[i][j]+1.0)*8.5*pixmult+0.5);
-		l = (int)((wfs_status.cog_y[i][j]+1.0)*8.5*pixmult+0.5);
-
-		/* OK, place a line at the right point */
-
-		overlay_line(90*pixmult, 90*pixmult, picture, 
-				i*18*pixmult+k, j*18*pixmult, 
-				18*pixmult, 1, 0, PLOT_LIGHT_BLUE);
-
-		overlay_line(90*pixmult, 90*pixmult, picture, 
-				i*18*pixmult, j*18*pixmult+l, 
-				18*pixmult, 1, 1, PLOT_LIGHT_BLUE);
-	    }
+		overlay_rectangle(andor_setup.npixx*pixmult,
+			andor_setup.npixy*pixmult,
+			picture,
+                    	max(subap_centroids_ref.xp[i] -
+				subap_centroids_ref.size/2-1,0)*pixmult 
+				+ 0.5*pixmult,
+                        max(andor_setup.npixy - 
+				subap_centroids_ref.yp[i] -
+				subap_centroids_ref.size/2,0)*pixmult +
+				0.5*pixmult,
+                       min(subap_centroids_ref.xp[i] + 
+				subap_centroids_ref.size/2-1,
+				andor_setup.npixx-1)*pixmult+ 0.5*pixmult,
+                       min(andor_setup.npixy - 
+				subap_centroids_ref.yp[i] +
+				subap_centroids_ref.size/2,andor_setup.npixy-1)
+				*pixmult+ 0.5*pixmult,
+                    		-1,PLOT_GREEN);
 	}
 
 	XPutImage(theDisplay,picture_window,theGC, picture_image,0,0,0,0,

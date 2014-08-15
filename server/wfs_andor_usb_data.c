@@ -239,7 +239,7 @@ void *andor_usb_thread(void *arg)
 		if (this_number_usb_images == last_number_usb_images)
 		{
 			unlock_usb_mutex();
-			usleep(100);
+			usleep(500);
 			continue;
 		}
 
@@ -303,7 +303,7 @@ void *andor_usb_thread(void *arg)
 			    /* Make some room for the other threads */
 			
 #warning I wonder about this usleep and some others
-			    usleep(500);
+			    usleep(5000);
 		    }
 		}
 

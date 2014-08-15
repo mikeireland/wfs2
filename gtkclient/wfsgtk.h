@@ -44,16 +44,21 @@
 #define WFS_HEIGHT		24
 #endif
 
+/* macro */
+
+#define min(a,b)                        (((a)<(b))?(a):(b))
+#define max(a,b)                        (((a)>(b))?(a):(b))
+
 /* Globals */
 
 extern int server;
 extern char display[256];      /* Name of display to use */
 extern int server_open;
 extern struct s_wfs_andor_setup andor_setup;
-extern struct s_wfs_status wfs_status;
 #ifdef GTK2
 extern int main_page;
 extern int andor_setup_page;
+extern int wfs_page;
 #endif
 extern GtkWidget *notebook;
 extern char engineering_mode;
@@ -64,6 +69,8 @@ extern char server_name[];
 extern GtkWidget *temp_label;
 extern int send_ready_for_display;
 extern int movie_running;
+extern struct s_wfs_subap_centroids subap_centroids_ref;
+extern struct s_wfs_subap_centroids subap_centroids;
 
 /* Prototypes */
 
@@ -89,7 +96,8 @@ void set_wfs_messages(void);
 int message_wfs_andor_setup(int server, struct smessage *mess);
 int message_wfs_andor_stop_movie(int server, struct smessage *mess);
 int message_wfs_andor_update_setup(int server, struct smessage *mess);
-int message_wfs_status(int server, struct smessage *mess);
+int message_wfs_subap_get_centroids_ref(int server, struct smessage *mess);
+int message_wfs_subap_get_centroids(int server, struct smessage *mess);
 
 /* andor.c */
 
@@ -97,6 +105,15 @@ void andor_setup_display(void);
 void andor_setup_update(void);
 void fill_andor_setup_page(GtkWidget *vbox);
 void wfs_andor_send_callback(GtkButton *button, gpointer user_data);
+
+/* awfs.c */
+
+void fill_wfs_page(GtkWidget *vbox);
+void wfs_make_dark_callback(GtkButton *button, gpointer signal);
+void wfs_threshold_callback(GtkButton *button, gpointer signal);
+int message_wfs_set_threshold(int server, struct smessage *mess);
+void wfs_num_frames_callback(GtkButton *button, gpointer signal);
+int message_wfs_set_num_frames(int server, struct smessage *mess);
 
 /* display.c */
 

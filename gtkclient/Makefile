@@ -50,8 +50,8 @@ all: wfsgtk
 # The user interface
 #
 
-wfsgtk: wfsgtk.o messages.o andor.o display.o
-	${CC} -o wfsgtk wfsgtk.o messages.o andor.o display.o $(LFLAGS)
+wfsgtk: wfsgtk.o messages.o andor.o wfs.o display.o
+	${CC} -o wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o $(LFLAGS)
 
 wfsgtk.o: wfsgtk.c wfsgtk.h
 	${CC} ${CFLAGS} -c wfsgtk.c
@@ -62,6 +62,9 @@ messages.o: messages.c wfsgtk.h
 andor.o: andor.c wfsgtk.h
 	${CC} ${CFLAGS} -c andor.c
 
+wfs.o: wfs.c wfsgtk.h
+	${CC} ${CFLAGS} -c wfs.c
+
 display.o: display.c wfsgtk.h
 	${CC} ${CFLAGS} -c display.c
 
@@ -70,7 +73,7 @@ display.o: display.c wfsgtk.h
 #
 
 clean:
-	rm -rf core wfsgtk wfsgtk.o messages.o andor.o display.o
+	rm -rf core wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o
 
 #
 # install

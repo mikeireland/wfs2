@@ -64,7 +64,7 @@ void set_wfs_messages(void)
         if (!add_message_job(server, WFS_ANDOR_STOP_MOVIE,
 		message_wfs_andor_stop_movie))
         {
-                fprintf(stderr, "Failed to add WFS_ANDOR_CURRENT_FRAME job.\n");
+                fprintf(stderr, "Failed to add WFS_ANDOR_STOP_MOVIE job.\n");
                 exit(-8);
         }
 
@@ -75,9 +75,31 @@ void set_wfs_messages(void)
                 exit(-8);
         }
 
-        if (!add_message_job(server, WFS_STATUS, message_wfs_status))
+        if (!add_message_job(server, WFS_SET_THRESHOLD,
+			message_wfs_set_threshold))
         {
-                fprintf(stderr, "Failed to add WFS_STATUS job.\n");
+                fprintf(stderr, "Failed to add WFS_SET_THRESHOLD job.\n");
+                exit(-8);
+        }
+
+        if (!add_message_job(server, WFS_SET_NUM_FRAMES,
+			message_wfs_set_num_frames))
+        {
+                fprintf(stderr, "Failed to add WFS_SET_NUM_FRAMES job.\n");
+                exit(-8);
+        }
+
+        if (!add_message_job(server, WFS_SUBAP_GET_CENTROIDS_REF,
+			message_wfs_subap_get_centroids_ref))
+        {
+                fprintf(stderr, "Failed to add WFS_SUBAP_GET_CENTROIDS_REF job.\n");
+                exit(-8);
+        }
+
+        if (!add_message_job(server, WFS_SUBAP_GET_CENTROIDS,
+			message_wfs_subap_get_centroids))
+        {
+                fprintf(stderr, "Failed to add WFS_SUBAP_GET_CENTROIDS job.\n");
                 exit(-8);
         }
 
@@ -165,21 +187,41 @@ int message_wfs_andor_update_setup(int server, struct smessage *mess)
 } /* message_wfs_andor_update_setup() */
 
 /************************************************************************/
-/* message_wfs_status()		                                        */
+/* message_wfs_subap_get_centroids_ref()                                */
 /*                                                                      */
 /************************************************************************/
 
-int message_wfs_status(int server, struct smessage *mess)
+int message_wfs_subap_get_centroids_ref(int server, struct smessage *mess)
 {
-        if (mess->length != sizeof(struct s_wfs_status))
+        if (mess->length != sizeof(struct s_wfs_subap_centroids))
         {
                 print_status(ERROR,
-                "Got WFS_STATUS message with bad data.\n");
+                "Got WFS_SUBAP_GET_CENTROIDS_REF message with bad data.\n");
                 return NOERROR;
         }
 
-        wfs_status = *((struct s_wfs_status *) mess->data);
+	subap_centroids_ref = *((struct s_wfs_subap_centroids*)mess->data);
 
         return NOERROR;
 
-} /* message_wfs_status() */
+} /* message_wfs_subap_get_centroids_ref() */
+
+/************************************************************************/
+/* message_wfs_subap_get_centroids()                                    */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_subap_get_centroids(int server, struct smessage *mess)
+{
+        if (mess->length != sizeof(struct s_wfs_subap_centroids))
+        {
+                print_status(ERROR,
+                "Got WFS_SUBAP_GET_CENTROIDS message with bad data.\n");
+                return NOERROR;
+        }
+
+	subap_centroids = *((struct s_wfs_subap_centroids*)mess->data);
+
+        return NOERROR;
+
+} /* message_wfs_subap_get_centroids() */

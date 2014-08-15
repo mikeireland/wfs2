@@ -69,6 +69,14 @@ void setup_wfs_messages(void)
 		message_wfs_andor_save_fits);
         server_add_message_job(WFS_ANDOR_CAMLINK_ONOFF,
 		message_wfs_andor_camlink_onoff);
+        server_add_message_job(WFS_TAKE_BACKGROUND,
+		message_wfs_take_background);
+        server_add_message_job(WFS_RESET_BACKGROUND,
+		message_wfs_reset_background);
+        server_add_message_job(WFS_SET_THRESHOLD,
+		message_wfs_set_threshold);
+        server_add_message_job(WFS_SET_NUM_FRAMES,
+		message_wfs_set_num_frames);
 
 } /* setup_wfs_messages() */
 
@@ -292,9 +300,8 @@ int message_wfs_andor_usb_onoff(struct smessage *message)
 
 int message_wfs_andor_current_frame(struct smessage *message)
 {
-	unsigned short int *values, *compressed_values, *p1;
-	int i;
-	at_u16	*p2;
+	float *values, *compressed_values, *p1;
+	int i,j;
         uLongf  len, clen;
 	struct smessage mess;
 
@@ -313,39 +320,45 @@ int message_wfs_andor_current_frame(struct smessage *message)
 
 	if (andor_send_setup() != NOERROR) return ERROR;
 
+	/* Make sure they know the reference centroids */
+
+	mess.type = WFS_SUBAP_GET_CENTROIDS_REF;
+	mess.length = sizeof(struct s_wfs_subap_centroids);
+        mess.data = (unsigned char *)&subap_centroids_ref;
+
+	if (server_send_message(active_socket, &mess) != NOERROR)
+        {
+                return error(ERROR,
+                        "Failed to send current reference subap centroids.");
+        }
+
+	/* Make sure they know the calculated centroids */
+
+	mess.type = WFS_SUBAP_GET_CENTROIDS;
+	mess.length = sizeof(struct s_wfs_subap_centroids);
+        mess.data = (unsigned char *)&subap_centroids;
+
+	if (server_send_message(active_socket, &mess) != NOERROR)
+        {
+                return error(ERROR,
+                        "Failed to send current subap centroids.");
+        }
+
 	/* Now copy and compress the current image */
 
-	len = andor_setup.npix * sizeof(unsigned short int);
+	len = andor_setup.npix * sizeof(float);
 	clen = 2*len;
 
-	if ((values = malloc(len)) == NULL) error(FATAL,"Out of memory.");
-	if ((compressed_values = malloc(clen)) == NULL)
+	if ((values = (float *)malloc(len)) == NULL) 
+		error(FATAL,"Out of memory.");
+	if ((compressed_values = (float *)malloc(clen)) == NULL)
 		error(FATAL,"Out of memory.");
 
-	/* 
-	 * Second also send the WFS status. This is just for an example.
-	 * Note that we lock the USB mutex for now so this does not
-	 * get over written by the USB thread.
-	 * Note that we do all the things that required the mutex locked here.
-	 */
-
-	mess.type = WFS_STATUS;
-	mess.length = sizeof(struct s_wfs_status);
-	mess.data = (unsigned char *)&wfs_status;
-
-	lock_usb_mutex();
-	if (server_send_message(active_socket, &mess) != NOERROR)
+	for(p1 = values, i = 1; i <= andor_setup.npixx; i++)
+	for(j = 1; j <= andor_setup.npixy; j++)
 	{
-		unlock_usb_mutex();
-                return error(ERROR,"Failed to send current status.");
+	    *p1++ = data_frame[i][j];
 	}
-
-	/* This too must be done with the mutex locked. */
-
-	for(p2 = image_data, p1 = values, i=0;
-	    i < andor_setup.npix;
-	    i++, p1++, p2++) *p1 = (unsigned short int)*p2;
-	unlock_usb_mutex();
 
 	if ((i = compress((unsigned char *)compressed_values, &clen,
 		 (unsigned char *)values, len)) < Z_OK)
