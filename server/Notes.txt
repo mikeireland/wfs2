@@ -1,0 +1,20 @@
+2014 08 09
+
+Camerlink seems to only work once after reboot. We need to look into this
+at a later time. When it does work it doesn't keep up with the incomming data,
+but the Xiao's code might be better at dealing with this than this.
+
+Tryuing
+
+Reboot
+Turn on camera
+RUn with -C cameralink off.
+Try  cameralink program. This works.
+Then try without -C
+This works but CL does not keep up with data. THis may be the old code. It may
+also be that this causes a buffer overflow to happen and this is the problem.
+Will try something like the old code.
+Still the second time we try it fails to ever work again..... New version of
+code no better, in fact it may be worse. Let's just work with USB for now.
+
+
