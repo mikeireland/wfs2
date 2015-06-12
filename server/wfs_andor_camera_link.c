@@ -40,7 +40,6 @@
 #include <sched.h>
 #include <sys/mman.h>
 
-static time_t start_time_of_camlink_frames = 0;
 static bool camlink_thread_running = FALSE;
 static pthread_t camlink_thread;
 static pthread_mutex_t camlink_mutex = PTHREAD_MUTEX_INITIALIZER;

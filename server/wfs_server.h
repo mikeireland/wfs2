@@ -72,7 +72,30 @@
 
 #define REF_CENTROID_FILENAME          "reference_centroids.dat"
 
-#define DFT_SUBAP_SIZE			9
+#define	DFT_DENOM_CLAMP_SUBAP		6
+#define	DFT_MIN_FLUX_SUBAP		10
+#define	DFT_CLAMP_FLUX_SUBAP		-1000
+
+#define MAX_MIRROR_DELTA		0.1
+#define MAX_MIRROR			1.75
+
+#warning We need to update these calibration numbers
+
+#define MIR_CALIB			6.8 /* From old system */
+#define DET_CALIB			2.1 /* From old system */
+
+#define DEFAULT_GAIN_X			(DET_CALIB/MIR_CALIB)
+#define DEFAULT_DAMP_X			(0.25)
+#define DEFAULT_GAIN_Y			(DET_CALIB/MIR_CALIB)
+#define DEFAULT_DAMP_Y			(0.25)
+
+/*Shack Hartmann rotation stage */
+
+#define TDC                             "/dev/ttyUSB1"
+#define TDC_BRATE                       B115200
+#define DFT_TDC_MAX_VEL                 5.
+#define DFT_TDC_ACCEL                   2.
+#define DFT_TDC_LED_ACT                 FALSE
 
 /* macro */
 
@@ -91,12 +114,28 @@ extern float **data_frame;
 extern float **dark_frame;
 extern float **calc_dark_frame;
 extern int dark_frame_num;
+extern float dark_frame_mean;
+extern float dark_frame_stddev;
 extern float **raw_frame;
 extern float **sum_frame;
 extern int sum_frame_num;
-extern float data_threshold;
+extern float data_threshold; /* For data in terms of STDDEV of dark frame. */
+extern struct s_wfs_tdc_status tdc_status;
+extern struct s_wfs_subap_centroids subap_centroids_mean;
 extern struct s_wfs_subap_centroids subap_centroids_ref;
 extern struct s_wfs_subap_centroids subap_centroids;
+extern struct s_wfs_clamp_fluxes clamp_fluxes;
+extern struct s_wfs_tiptilt wfs_tiptilt;
+extern int num_mean_aberrations;
+extern struct s_wfs_aberrations wfs_mean_aberrations;
+extern struct s_wfs_aberrations wfs_aberrations;
+extern bool set_subap_centroids_ref;
+extern struct s_wfs_tiptilt_modulation wfs_tiptilt_modulation;
+extern struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
+extern bool fake_mirror;
+extern float max_radius;
+extern bool new_mean_aberrations;
+
 
 /* Prototypes */
 
@@ -107,8 +146,8 @@ void close_function(void);
 int wfs_top_job(void);
 int wfs_periodic_job(void);
 void print_usage_message(char *name);
-int wfs_write_ref_centroids(void);
-int wfs_load_ref_centroids(void);
+int wfs_write_ref_centroids(char *filename);
+int wfs_load_ref_centroids(char *filename);
 
 /* wfs_messages.c */
 
@@ -132,6 +171,21 @@ int message_wfs_andor_horizontal_speed(struct smessage *message);
 int message_wfs_andor_get_setup(struct smessage *message);
 int message_wfs_andor_save_fits(struct smessage *message);
 int message_wfs_andor_camlink_onoff(struct smessage *message);
+int message_wfs_subap_send_centroids_ref(struct smessage *message);
+int message_wfs_subap_shift_rot_scale_centroids_ref(struct smessage *message);
+int message_wfs_subap_write_centroids_ref(struct smessage *message);
+int message_wfs_subap_load_centroids_ref(struct smessage *message);
+void send_wfs_text_message(char *fmt, ...);
+int message_wfs_open_tt_data_socket(struct smessage *message);
+int message_wfs_get_clamp_fluxes(struct smessage *message);
+int message_wfs_subap_calc_centroids_ref(struct smessage *mess);
+int message_wfs_set_num_mean(struct smessage *mess);
+int message_wfs_set_num_mean(struct smessage *mess);
+int message_wfs_set_modulation(struct smessage *mess);
+int message_wfs_set_servo(struct smessage *mess);
+int message_wfs_get_servo(struct smessage *mess);
+int message_wfs_closeloop_message(struct smessage *mess);
+int message_wfs_set_send(struct smessage *mess);
 
 /* wfs_andor.c */
 
@@ -186,6 +240,10 @@ int message_wfs_take_background(struct smessage *message);
 int message_wfs_reset_background(struct smessage *message);
 int message_wfs_set_threshold(struct smessage *message);
 int message_wfs_set_num_frames(struct smessage *message);
+int message_wfs_save_tiptilt(struct smessage *message);
+void complete_tiptilt_record(void);
+int message_wfs_save_data(struct smessage *message);
+void complete_data_record(void);
 
 /* wfs_andor_camlink_data.c */
 
@@ -197,4 +255,79 @@ int andor_stop_camlink(void);
 void *andor_camlink_thread(void *arg);
 void lock_camlink_mutex(void);
 void unlock_camlink_mutex(void);
+
+/* wfs_wavefront.c */
+
+void subap_calc_pitch(void);
+int subap_send_centroids_ref(void);
+void wfs_simulation_centroid(float centerx, float centery,
+                             float pitch, float angle);
+void subap_calc_pix_mask(void);
+void calculate_centroids(void);
+int message_wfs_centroid_type(struct smessage *message);
+int message_wfs_set_clamp_flux(struct smessage *message);
+void send_fluxes(void);
+
+/* open_tiptilt_data_socket.c */
+
+int open_tiptilt_data_socket(char *scope_name);
+int close_tiptilt_data_socket(void);
+int send_tiptilt_data(float Az, float El);
+int     client_write_ready(int fd);
+
+/* wfs_text_message.c */
+
+int setup_text_message(void);
+void send_wfs_text_message(char *fmt, ...);
+void broadcast_text_message(void);
+
+/* wfs_tiptilt.c */
+
+void calculate_tiptilt(void);
+void servo_tiptilt(void);
+
+/* sh_control.c */
+
+long char_to_dec(char *s, int nbyte, bool ledian);
+char *dec_to_char(long n, bool lendian);
+int tdc_open(void);
+int tdc_initialize(void);
+int tdc_close(void);
+int tdc_get_response(int num_bytes, char first_return_byte, char *buffer);
+int tdc_identify(void);
+int tdc_home(void);
+int tdc_setvelparams(struct s_wfs_tdc_status status);
+int tdc_getvelparams(void);
+int tdc_move_completed(void);
+int tdc_rel_move(float step);
+int tdc_abs_move(float step);
+int tdc_move_stopped(void);
+int tdc_move_stop(void);
+int tdc_act_avmodes(void);
+int tdc_deact_avmodes(void);
+int tdc_set_poscounter(float pos);
+int tdc_get_poscounter(void);
+int tdc_get_char(void);
+
+/* sh_messages.c */
+
+void setup_tdc_messages(void);
+int message_tdc_open(struct smessage *message);
+int message_tdc_initialize(struct smessage *message);
+int message_tdc_close(struct smessage *message);
+int message_tdc_identify(struct smessage *message);
+int message_tdc_home(struct smessage *message);
+int message_tdc_setvelparams(struct smessage *message);
+int message_tdc_getvelparams(struct smessage *message);
+int message_tdc_vel_slower(struct smessage *message);
+int message_tdc_vel_faster(struct smessage *message);
+int message_tdc_rel_move(struct smessage *message);
+int message_tdc_abs_move(struct smessage *message);
+int message_tdc_move_stop(struct smessage *message);
+int message_tdc_act_avmodes(struct smessage *message);
+int message_tdc_deact_avmodes(struct smessage *message);
+int message_tdc_set_poscounter(struct smessage *message);
+int message_tdc_get_poscounter(struct smessage *message);
+int message_tdc_update_status(struct smessage *message);
+
 #endif

@@ -103,6 +103,41 @@ void set_wfs_messages(void)
                 exit(-8);
         }
 
+	if (!add_message_job(server, WFS_TEXT_MESSAGE,
+                message_wfs_text_message))
+        {
+                fprintf(stderr,"Failed to add WFS_TEXT_MESSAGE job.\n");
+                exit(-8);
+        }
+
+	if (!add_message_job(server, WFS_SET_CLAMP_FLUXES,
+                message_wfs_set_clamp_fluxes))
+        {
+                fprintf(stderr,"Failed to add WFS_SET_CLAMP_FLUXES job.\n");
+                exit(-8);
+        }
+
+	if (!add_message_job(server, WFS_TIPTILT_INFO, 
+		message_wfs_tiptilt_info))
+       {
+            fprintf(stderr, "Failed to add WFS_TIPTILT_INFO job.\n");
+            exit(-8);
+       }
+
+	if (!add_message_job(server, WFS_MEAN_ABERRATIONS, 
+		message_wfs_mean_aberrations))
+       {
+            fprintf(stderr, "Failed to add WFS_MEAN_ABERRATIONS job.\n");
+            exit(-8);
+       }
+
+	if (!add_message_job(server, WFS_SET_SERVO, 
+		message_wfs_set_servo))
+        {
+            fprintf(stderr, "Failed to add WFS_SET_SERVO job.\n");
+            exit(-8);
+        }
+
 } /* set_wfs_messages() */
 
 /************************************************************************/
@@ -225,3 +260,116 @@ int message_wfs_subap_get_centroids(int server, struct smessage *mess)
         return NOERROR;
 
 } /* message_wfs_subap_get_centroids() */
+
+/************************************************************************/
+/* message_wfs_text_message()                                           */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_text_message(int server, struct smessage *mess)
+{
+        if (mess->length == 0) return NOERROR;
+
+        gtk_label_set_text((GtkLabel *)message_label, (char *)mess->data);
+
+        return NOERROR;
+
+} /* message_wfs_text_message() */
+
+/************************************************************************/
+/* message_wfs_set_clamp_fluxes()                                       */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_set_clamp_fluxes(int server, struct smessage *mess)
+{
+        if (mess->length != sizeof(struct s_wfs_clamp_fluxes))
+        {
+                print_status(ERROR,
+                "Got WFS_SET_CLAMP_FLUXES message with bad data.\n");
+                return NOERROR;
+        }
+
+	clamp_fluxes = *((struct s_wfs_clamp_fluxes *)mess->data);
+
+	update_clamp_fluxes();
+
+        return NOERROR;
+
+} /* message_wfs_set_clamp_fluxes() */
+
+/************************************************************************/
+/* message_wfs_tiptilt_info                                             */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_tiptilt_info(int server, struct smessage *mess)
+{
+
+	if (mess->length != sizeof(struct s_wfs_tiptilt))
+	{
+      		return print_status(ERROR,
+                    "Got WFS_TIPTILT_INFO message with bad data.\n");
+
+	}
+
+	wfs_tiptilt = *((struct s_wfs_tiptilt *) mess->data);
+
+	if (wfs_show_tiptilt_info_flag)
+	{
+        	do_tt_display();
+	}
+ 	else
+	{
+        	clear_tt_display();
+	}
+
+	return NOERROR;
+
+} /* message_wfs_tiptilt_info() */
+
+/************************************************************************/
+/* message_wfs_mean_aberrations                                         */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_mean_aberrations(int server, struct smessage *mess)
+{
+
+	if (mess->length != sizeof(struct s_wfs_aberrations))
+	{
+      		return print_status(ERROR,
+                    "Got WFS_MEAN_ABERRATIONS message with bad data.\n");
+
+	}
+
+	wfs_mean_aberrations = *((struct s_wfs_aberrations *) mess->data);
+
+	update_mean_aberrations();
+
+	return NOERROR;
+
+} /* message_wfs_mean_aberrations() */
+
+/************************************************************************/
+/* message_wfs_set_servo                                                */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_set_servo(int server, struct smessage *mess)
+{
+
+	if (mess->length != sizeof(struct s_wfs_tiptilt_servo))
+	{
+      		return print_status(ERROR,
+                    "Got WFS_SET_SERVO message with bad data.\n");
+
+	}
+
+	wfs_tiptilt_servo = *((struct s_wfs_tiptilt_servo *) mess->data);
+
+	update_tiptilt_servo();
+
+	return NOERROR;
+
+} /* message_wfs_mean_aberrations() */

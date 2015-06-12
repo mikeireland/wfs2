@@ -28,12 +28,18 @@
 # Add any new targets here:
 
 OFILES= \
-	wfs_server.o\
-	wfs_messages.o\
-	wfs_andor.o\
-	wfs_andor_usb_data.o\
-	wfs_andor_camera_link.o\
-	wfs_data.o
+        wfs_server.o\
+        wfs_messages.o\
+        wfs_andor.o\
+        wfs_andor_usb_data.o\
+        wfs_andor_camera_link.o\
+        wfs_data.o\
+        wfs_wavefront.o\
+        wfs_tiptilt_data_socket.o\
+        wfs_text_message.o\
+        wfs_tiptilt.o\
+        sh_control.o\
+        sh_messages.o
 
 #
 # Master target
@@ -45,7 +51,8 @@ all:
 #
 
 clean: 
-	rm -f $(OFILES) wfs_server core parsengc ngc.h image.bmp image.fit
+	rm -f $(OFILES) wfs_server core parsengc ngc.h image.bmp image.fit \
+	test_andor test_andor.o
 
 #
 # Rule for installation

@@ -139,6 +139,7 @@ int andor_start_usb(void)
 	unlock_usb_mutex();
 
 	if (verbose) error(MESSAGE,"Andor USB data collection started.");
+	send_wfs_text_message("Andor USB data collection started.");
 
 	return andor_send_setup();
 
@@ -181,6 +182,7 @@ int andor_stop_usb(void)
 	/* That should be all */
 
 	if (verbose) error(MESSAGE,"Andor USB data collection stopped.");
+	send_wfs_text_message("Andor USB data collection stopped.");
 
 	return andor_send_setup();
 
@@ -345,8 +347,7 @@ void *andor_usb_thread(void *arg)
 
 void lock_usb_mutex(void)
 {
-#warning MUTEX ignored.
-        //pthread_mutex_lock(&usb_mutex);
+        pthread_mutex_lock(&usb_mutex);
 
 } /* lock_usb_mutex() */
 
@@ -358,7 +359,6 @@ void lock_usb_mutex(void)
 
 void unlock_usb_mutex(void)
 {
-#warning MUTEX ignored.
-        //pthread_mutex_unlock(&usb_mutex);
+        pthread_mutex_unlock(&usb_mutex);
 
 } /* unlock_usb_mutex() */

@@ -30,7 +30,7 @@
 
 CC = gcc
 CFLAGS = -g -O2 -Wall -DUSE_GTK `chara-gtk-cflags`
-LFLAGS =  -L/usr/X11/lib -lgtkclient -lclient -lcfitsio -lsockman -lchara -lcfitsio -lnsimpleX -lX11 -lrwfits -lnrc -lsla -lz `chara-gtk-libs`
+LFLAGS =  -L/usr/X11/lib -lgtkclient -lclient -lcfitsio -lsockman -lchara -lcfitsio -lnsimpleX -lX11 -lrwfits -lnrc -lsla -lz `chara-gtk-libs` -lm
 LIBDIR = /usr/local/lib
 INCDIR = /usr/local/include
 HELPDIR= /usr/local/lib/ui_help
@@ -50,8 +50,9 @@ all: wfsgtk
 # The user interface
 #
 
-wfsgtk: wfsgtk.o messages.o andor.o wfs.o display.o
-	${CC} -o wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o $(LFLAGS)
+wfsgtk: wfsgtk.o messages.o andor.o wfs.o display.o adjust.o rotation.o
+	${CC} -o wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o rotation.o\
+		adjust.o $(LFLAGS)
 
 wfsgtk.o: wfsgtk.c wfsgtk.h
 	${CC} ${CFLAGS} -c wfsgtk.c
@@ -68,12 +69,19 @@ wfs.o: wfs.c wfsgtk.h
 display.o: display.c wfsgtk.h
 	${CC} ${CFLAGS} -c display.c
 
+adjust.o: adjust.c wfsgtk.h
+	${CC} ${CFLAGS} -c adjust.c
+
+rotation.o: rotation.c wfsgtk.h
+	${CC} ${CFLAGS} -c rotation.c
+
 #
 # Cleanup
 #
 
 clean:
-	rm -rf core wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o
+	rm -rf core wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o \
+		adjust.o rotation.o
 
 #
 # install

@@ -42,17 +42,36 @@ char do_local_display = TRUE;
 int main_page = -1;
 int andor_setup_page = -1;
 int wfs_page = -1;
+int adjust_page = -1;
+int rot_page = -1;
 #endif
 GtkWidget *notebook = NULL;
 struct s_wfs_andor_setup andor_setup;
 char engineering_mode = FALSE;
 char got_andor_setup;
 char server_name[256];
+char scope_name[256];
 GtkWidget *temp_label;
 int send_ready_for_display = FALSE;
 int movie_running = FALSE;
 struct s_wfs_subap_centroids subap_centroids_ref;
 struct s_wfs_subap_centroids subap_centroids;
+bool show_boxes = TRUE;
+GtkWidget *message_label;
+static GtkWidget *tilt_x_label;
+static GtkWidget *tilt_y_label;
+static GtkWidget *focus_label;
+static GtkWidget *a1_label;
+static GtkWidget *a2_label;
+static GtkWidget *r0_label;
+static GtkWidget *aber_button[5];
+struct s_wfs_clamp_fluxes clamp_fluxes;
+bool wfs_show_tiptilt_info_flag = FALSE;
+struct s_wfs_tiptilt wfs_tiptilt;
+bool plot_aber = FALSE;
+struct s_wfs_aberrations wfs_mean_aberrations;
+struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
+scope aber_scope;
 
 int main(int  argc, char *argv[] )
 {
@@ -131,6 +150,7 @@ int main(int  argc, char *argv[] )
         }
 
 	sprintf(server_name, "wfs_%s", argv[0]);
+	sprintf(scope_name, "%s", argv[0]);
 
 	/* Which machine are we using? */
 
@@ -235,7 +255,130 @@ int main(int  argc, char *argv[] )
 
         fill_wfs_page(vbox);
 
+	/* The ADJUST Page */
+
+	if (engineering_mode)
+	{
+		/* Servo adjustment control */
+
+            	vbox = gtk_vbox_new(FALSE, 0);
+            	label = gtk_label_new("ADJUST");
+#ifdef GTK2
+            	adjust_page =
+#endif
+                	gtk_notebook_append_page((GtkNotebook *)notebook,
+                	vbox, label);
+
+            	/* And fill things out. */
+    
+        	fill_adjust_page(vbox);
+
+		/* Rotation stage control */
+
+#ifdef ADD_ROT_PAGE
+            	vbox = gtk_vbox_new(FALSE, 0);
+            	label = gtk_label_new("ROT");
+#ifdef GTK2
+            	rot_page =
+#endif
+                	gtk_notebook_append_page((GtkNotebook *)notebook,
+                	vbox, label);
+
+            	/* And fill things out. */
+    
+        	fill_rotation_page(vbox);
+#endif
+	}
+
 	/* Some buttons for the bottom of all pages */
+
+	vbox = gtk_vbox_new(FALSE, 0);
+        gtk_container_add (GTK_CONTAINER (bigvbox), vbox);
+        gtk_widget_show(vbox);
+
+	wfs_mean_aberrations.r0 = 0.0;
+	wfs_mean_aberrations.seeing = 0.0;
+	wfs_mean_aberrations.det_stddev = 0.0;
+	wfs_mean_aberrations.mir_stddev = 0.0;
+	wfs_mean_aberrations.xtilt = 0.0;
+	wfs_mean_aberrations.ytilt = 0.0;
+	wfs_mean_aberrations.focus = 0.0;
+	wfs_mean_aberrations.a1 = 0.0;
+	wfs_mean_aberrations.a2 = 0.0;
+
+        message_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(vbox), message_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (message_label, WFS_WIDTH, WFS_HEIGHT);
+        gtk_widget_show(message_label);
+
+	hbox = gtk_hbox_new(FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(bigvbox), hbox, TRUE, TRUE, 0);
+        gtk_widget_show(hbox);
+
+	aber_button[0] = gtk_check_button_new_with_label("");
+        gtk_box_pack_start(GTK_BOX(hbox), aber_button[0], TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (aber_button[0]), 1);
+        gtk_widget_set_usize (aber_button[0],WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_toggle_button_set_active((GtkToggleButton *)aber_button[0], 1);
+        gtk_widget_show (aber_button[0]);
+
+        tilt_x_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), tilt_x_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (tilt_x_label, 3*WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_show(tilt_x_label);
+
+        aber_button[1] = gtk_check_button_new_with_label("");
+        gtk_box_pack_start(GTK_BOX(hbox), aber_button[1], TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (aber_button[1]), 1);
+        gtk_widget_set_usize (aber_button[1],WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_toggle_button_set_active((GtkToggleButton *)aber_button[1], 1);
+        gtk_widget_show (aber_button[1]);
+
+        tilt_y_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), tilt_y_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (tilt_y_label, 3*WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_show(tilt_y_label);
+
+	aber_button[2] = gtk_check_button_new_with_label("");
+        gtk_box_pack_start(GTK_BOX(hbox), aber_button[2], TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (aber_button[2]), 1);
+        gtk_widget_set_usize (aber_button[2],WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_toggle_button_set_active((GtkToggleButton *)aber_button[2], 1);
+        gtk_widget_show (aber_button[2]);
+
+        focus_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), focus_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (focus_label, 3*WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_widget_show(focus_label);
+
+        aber_button[3] = gtk_check_button_new_with_label("");
+        gtk_box_pack_start(GTK_BOX(hbox), aber_button[3], TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (aber_button[3]), 1);
+        gtk_widget_set_usize (aber_button[3],WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_toggle_button_set_active((GtkToggleButton *)aber_button[3], 1);
+        gtk_widget_show (aber_button[3]);
+
+        a1_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), a1_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (a1_label, 3*WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_widget_show(a1_label);
+
+        aber_button[4] = gtk_check_button_new_with_label("");
+        gtk_box_pack_start(GTK_BOX(hbox), aber_button[4], TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (aber_button[4]), 1);
+        gtk_widget_set_usize (aber_button[4],WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_toggle_button_set_active((GtkToggleButton *)aber_button[4], 1);
+        gtk_widget_show (aber_button[4]);
+
+        a2_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), a2_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (a2_label, 3*WFS_WIDTH/24, WFS_HEIGHT);
+        gtk_widget_show(a2_label);
+
+        r0_label = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(hbox), r0_label , TRUE, TRUE, 0);
+        gtk_widget_set_usize (r0_label, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(r0_label);
 
 	hbox = gtk_hbox_new(FALSE, 0);
         gtk_box_pack_start(GTK_BOX(bigvbox), hbox, TRUE, TRUE, 0);
@@ -592,6 +735,42 @@ void reopen_socket_callback(GtkButton *button, gpointer user_data)
 			print_status(FATAL,"Failed to get andor setup.\n");
 	}
 
+	/* Make sure we know the current clamp fluxes */
+
+	mess.type = WFS_GET_CLAMP_FLUXES;
+	mess.length = 0;
+	mess.data = NULL;
+
+	if (!send_message(server, &mess))
+	{
+                if (!server_open)
+                {
+			fprintf(stderr,
+			"Failed to send WFS_GET_CLAMP_FLUXES.\n");
+                        exit(-7);
+                }
+                else
+			print_status(ERROR,
+			"Failed to send WFS_GET_CLAMP_FLUXES.\n");
+	}
+
+	/* Make sure we know the current servo parameters */
+
+	mess.type = WFS_GET_SERVO;
+	mess.length = 0;
+	mess.data = NULL;
+
+	if (!send_message(server, &mess))
+	{
+                if (!server_open)
+                {
+			fprintf(stderr, "Failed to send WFS_GET_SERVO.\n");
+                        exit(-7);
+                }
+                else
+			print_status(ERROR, "Failed to send WFS_GET_SERVO.\n");
+	}
+
         /* OK, if display is on tell server we are ready */
 
 #ifdef DISPLAY_WORKING
@@ -762,3 +941,102 @@ void wfs_camlink_onoff_callback(GtkButton *widget, gpointer type)
 		toggle_movie_running_callback(widget, type);
 
 } /* wfs_camlink_onoff_callback() */
+
+/************************************************************************/
+/* update_mean_aberrations()                                            */
+/*                                                                      */
+/* Update the aberrations text display.					*/
+/************************************************************************/
+
+void update_mean_aberrations(void)
+{
+	char	s[345];
+        GtkStyle* style;
+        GdkColor color_green = {4L,0,65535,0};
+        GdkColor color_red = {4L,65535,0,0};
+        GdkColor color_dark_blue = {4L,0,0,65535};
+        GdkColor color_purple = {4L,65535,0,65535};
+        GdkColor color_light_blue = {4L,0,65535,65535};
+        float   *values;
+
+        style = gtk_style_copy (gtk_widget_get_style (tilt_x_label));
+        style->fg[GTK_STATE_NORMAL] = color_red;
+        style->fg[GTK_STATE_PRELIGHT] = color_red;
+        gtk_widget_set_style (tilt_x_label, style);
+        sprintf(s,"X: %+6.3f", wfs_mean_aberrations.xtilt);
+        gtk_label_set_text((GtkLabel *) tilt_x_label, s);
+
+        style = gtk_style_copy (gtk_widget_get_style (tilt_y_label));
+        style->fg[GTK_STATE_NORMAL] = color_green;
+        style->fg[GTK_STATE_PRELIGHT] = color_green;
+        gtk_widget_set_style (tilt_y_label, style);
+        sprintf(s,"Y: %+6.3f", wfs_mean_aberrations.ytilt);
+        gtk_label_set_text((GtkLabel *) tilt_y_label, s);
+
+        style = gtk_style_copy (gtk_widget_get_style (focus_label));
+        style->fg[GTK_STATE_NORMAL] = color_purple;
+        style->fg[GTK_STATE_PRELIGHT] = color_purple;
+        gtk_widget_set_style (focus_label, style);
+        sprintf(s,"Foc: %+6.3f", wfs_mean_aberrations.focus);
+        gtk_label_set_text((GtkLabel *) focus_label, s);
+
+        style = gtk_style_copy (gtk_widget_get_style (a1_label));
+        style->fg[GTK_STATE_NORMAL] = color_light_blue;
+        style->fg[GTK_STATE_PRELIGHT] = color_light_blue;
+        gtk_widget_set_style (a1_label, style);
+        sprintf(s,"A1: %+6.3f", wfs_mean_aberrations.a1);
+        gtk_label_set_text((GtkLabel *) a1_label, s);
+
+        style = gtk_style_copy (gtk_widget_get_style (a2_label));
+        style->fg[GTK_STATE_NORMAL] = color_dark_blue;
+        style->fg[GTK_STATE_PRELIGHT] = color_dark_blue;
+        gtk_widget_set_style (a2_label, style);
+        sprintf(s,"A2: %+6.3f", wfs_mean_aberrations.a2);
+        gtk_label_set_text((GtkLabel *) a2_label, s);
+
+	sprintf(s,"r0 = %5.1f", wfs_mean_aberrations.r0);
+        gtk_label_set_text((GtkLabel *) r0_label, s);
+
+        if (plot_aber)
+        {
+                values = vector(1, 6);
+
+                values[6] = 0.0;
+
+                if (gtk_toggle_button_get_active(
+                   (GtkToggleButton *)aber_button[0]))
+                {
+                        values[1] =  wfs_mean_aberrations.xtilt;
+                }
+                else
+                        values[1] = 0.0;
+
+                if (gtk_toggle_button_get_active(
+                   (GtkToggleButton *)aber_button[1]))
+                        values[2] =  wfs_mean_aberrations.ytilt;
+                else
+                        values[2] = 0.0;
+
+                if (gtk_toggle_button_get_active(
+                   (GtkToggleButton *)aber_button[2]))
+                        values[3] =  wfs_mean_aberrations.focus;
+                else
+                        values[3] = 0.0;
+
+                if (gtk_toggle_button_get_active(
+                   (GtkToggleButton *)aber_button[3]))
+                        values[4] =  wfs_mean_aberrations.a1;
+                else
+                        values[4] = 0.0;
+
+                if (gtk_toggle_button_get_active(
+                   (GtkToggleButton *)aber_button[4]))
+                        values[5] =  wfs_mean_aberrations.a2;
+                else
+                        values[5] = 0.0;
+
+                update_scope(aber_scope, values);
+                free_vector(values, 1, 6);
+        }
+
+} /* update_mean_aberrations() */
