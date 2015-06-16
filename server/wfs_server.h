@@ -84,9 +84,9 @@
 #define MIR_CALIB			6.8 /* From old system */
 #define DET_CALIB			2.1 /* From old system */
 
-#define DEFAULT_GAIN_X			(DET_CALIB/MIR_CALIB)
+#define DEFAULT_GAIN_X			(-0.15)
 #define DEFAULT_DAMP_X			(0.25)
-#define DEFAULT_GAIN_Y			(DET_CALIB/MIR_CALIB)
+#define DEFAULT_GAIN_Y			(-0.15)
 #define DEFAULT_DAMP_Y			(0.25)
 
 /*Shack Hartmann rotation stage */
