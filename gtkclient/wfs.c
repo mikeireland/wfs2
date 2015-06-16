@@ -669,6 +669,8 @@ void wfs_toggle_plot_aber(GtkButton *button, gpointer user_data)
                 add_signal(&aber_scope, PLOT_LIGHT_BLUE, -0.75, 0.75);
                 add_signal(&aber_scope, PLOT_DARK_BLUE, -0.75, 0.75);
                 add_signal(&aber_scope, PLOT_WHITE, -0.75, 0.75);
+                add_signal(&aber_scope, 65535, 32768, 0, -0.75, 0.75);
+                add_signal(&aber_scope, 32768, 65535, 0, -0.75, 0.75);
 
                 plot_aber = TRUE;
         }
