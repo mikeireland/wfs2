@@ -324,10 +324,10 @@ int message_wfs_andor_usb_onoff(struct smessage *message)
 /* message_wfs_andor_current_frame()					*/
 /*									*/
 /************************************************************************/
-
+#define NUM_GREY_LEVELS 32
 int message_wfs_andor_current_frame(struct smessage *message)
 {
-	float *values, *compressed_values, *p1;
+	float *values, *compressed_values, *p1, max_cnts, min_cnts, cnts_scale;
 	int i,j;
         uLongf  len, clen;
 	struct smessage mess;
@@ -371,6 +371,18 @@ int message_wfs_andor_current_frame(struct smessage *message)
                         "Failed to send current subap centroids.");
         }
 
+	/* First, find the max and min to limited number of grey scale values...*/
+
+	min_cnts = 1e8;
+	max_cnts = -1e8;
+	for(i = 1; i <= andor_setup.npixx; i++)
+	for(j = 1; j <= andor_setup.npixy; j++)
+	{
+		if (data_frame[i][j] < min_cnts) min_cnts=data_frame[i][j];
+		if (data_frame[i][j] > max_cnts) max_cnts=data_frame[i][j];
+	}
+	cnts_scale = (max_cnts - min_cnts)/NUM_GREY_LEVELS;
+
 	/* Now copy and compress the current image */
 
 	len = andor_setup.npix * sizeof(float);
@@ -384,7 +396,7 @@ int message_wfs_andor_current_frame(struct smessage *message)
 	for(p1 = values, i = 1; i <= andor_setup.npixx; i++)
 	for(j = 1; j <= andor_setup.npixy; j++)
 	{
-	    *p1++ = data_frame[i][j];
+	    *p1++ = ((int)((data_frame[i][j] - min_cnts)/cnts_scale) * cnts_scale) + min_cnts;
 	}
 
 	if ((i = compress((unsigned char *)compressed_values, &clen,
