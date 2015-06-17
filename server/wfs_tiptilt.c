@@ -173,6 +173,7 @@ void calculate_tiptilt(void)
 
 	wfs_aberrations.det_stddev = wfs_tiptilt.correctx;
 	wfs_aberrations.mir_stddev = wfs_tiptilt.correcty;
+	wfs_aberrations.labao_rate = current_labao_receive_rate();
 	wfs_aberrations.r0 = wfs_mean_aberrations.r0;
 	wfs_aberrations.seeing = wfs_mean_aberrations.seeing;
 
@@ -297,6 +298,7 @@ void servo_tiptilt(void)
 {
 	static float	delta_x = 0.0;
 	static float	delta_y = 0.0;
+	float		az, el;
 	float	gain = 0.0;
 
 	/* Now, are we faking out the servo? */
@@ -319,20 +321,26 @@ void servo_tiptilt(void)
 				sin(wfs_tiptilt_modulation.cycle) -
 			wfs_tiptilt.correctx;
 	    delta_y = wfs_tiptilt_modulation.amplitude_y * 
-				sin(wfs_tiptilt_modulation.cycle) -
+				cos(wfs_tiptilt_modulation.cycle) -
 			wfs_tiptilt.correcty;
 
 	    wfs_tiptilt_modulation.cycle += wfs_tiptilt_modulation.delta_cycle;
 	}
 	else if (wfs_tiptilt_servo.on)
 	{
+	    /* Anything from labao? */
+
+	    current_labao_tiptilt(&az, &el);
+
 	    /* Servo is on */
 
-	    delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx
-			- wfs_tiptilt_servo.damp_x * delta_x;
+	    delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx +
+		        wfs_tiptilt_servo.labao_x * az -
+			wfs_tiptilt_servo.damp_x * delta_x;
 	
-	    delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety
-			- wfs_tiptilt_servo.damp_y * delta_y;
+	    delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety +
+		        wfs_tiptilt_servo.labao_y * el -
+			wfs_tiptilt_servo.damp_y * delta_y;
 	}
 	else
 	{

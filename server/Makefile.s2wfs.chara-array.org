@@ -49,9 +49,9 @@ OFILES= \
 	wfs_tiptilt_data_socket.o\
 	wfs_text_message.o\
 	wfs_tiptilt.o\
+	wfs_labao_tiptilt.o\
 	sh_control.o\
 	sh_messages.o
-
 
 #
 # Rule for compiling and adding a unit to the library

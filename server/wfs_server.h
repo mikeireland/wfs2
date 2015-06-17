@@ -330,4 +330,15 @@ int message_tdc_set_poscounter(struct smessage *message);
 int message_tdc_get_poscounter(struct smessage *message);
 int message_tdc_update_status(struct smessage *message);
 
+/* wfs_labao_tiptilt.c */
+
+void initialize_labao_tiptilt(void);
+int reopen_labao_tiptilt_socket(int argc, char **argv);
+void open_labao_tiptilt_socket(void);
+int flush_labao_tiptilt(int argc, char **argv);
+void stop_labao_tiptilt(void);
+void *do_labao_tiptilt(void *arg);
+void current_labao_tiptilt(float *az, float *el);
+float current_labao_receive_rate(void);
+int     labao_tiptilt_waiting(int fd);
 #endif

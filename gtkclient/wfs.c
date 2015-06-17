@@ -38,8 +38,10 @@ static GtkWidget *entry_num_mean = NULL;
 static GtkWidget *entry_num_save_tt = NULL;
 static GtkWidget *entry_num_save_data = NULL;
 static GtkWidget *entry_gain_x = NULL;
+static GtkWidget *entry_labao_x = NULL;
 static GtkWidget *entry_damp_x = NULL;
 static GtkWidget *entry_gain_y = NULL;
+static GtkWidget *entry_labao_y = NULL;
 static GtkWidget *entry_damp_y = NULL;
 
 #define NUM_SERVO  2
@@ -264,50 +266,74 @@ void fill_wfs_page(GtkWidget *vbox)
 
         label = gtk_label_new("X Gain:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
         entry_gain_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
         gtk_box_pack_start(GTK_BOX(hbox), entry_gain_x, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_gain_x, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_gain_x, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(entry_gain_x);
+
+        label = gtk_label_new("X LabAo:");
+        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_show(label);
+			/* Value, min, max, step, pageup, pagedown */
+        adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
+			/* Climb Rate, Digits */
+        entry_labao_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        gtk_box_pack_start(GTK_BOX(hbox), entry_labao_x, TRUE, TRUE, 0);
+        gtk_widget_set_usize (entry_labao_x, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_show(entry_labao_x);
 
         label = gtk_label_new("X Damp:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, 0.0, 1.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
         entry_damp_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
         gtk_box_pack_start(GTK_BOX(hbox), entry_damp_x, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_damp_x, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_damp_x, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(entry_damp_x);
 
         label = gtk_label_new("Y Gain:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
         entry_gain_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
         gtk_box_pack_start(GTK_BOX(hbox), entry_gain_y, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_gain_y, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_gain_y, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(entry_gain_y);
+
+        label = gtk_label_new("Y LabAo:");
+        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_show(label);
+			/* Value, min, max, step, pageup, pagedown */
+        adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
+			/* Climb Rate, Digits */
+        entry_labao_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        gtk_box_pack_start(GTK_BOX(hbox), entry_labao_y, TRUE, TRUE, 0);
+        gtk_widget_set_usize (entry_labao_y, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_show(entry_labao_y);
 
         label = gtk_label_new("Y Damp:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, 0.0, 1.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
         entry_damp_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
         gtk_box_pack_start(GTK_BOX(hbox), entry_damp_y, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_damp_y, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_damp_y, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(entry_damp_y);
 
         /* Row 6 */
@@ -801,10 +827,14 @@ void wfs_set_servo_callback(GtkButton *button, gpointer user_data)
 
 	data.gain_x = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_gain_x);
+	data.labao_x = gtk_spin_button_get_value_as_float(
+		(GtkSpinButton *)entry_labao_x);
 	data.damp_x = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_damp_x);
 	data.gain_y = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_gain_y);
+	data.labao_y = gtk_spin_button_get_value_as_float(
+		(GtkSpinButton *)entry_labao_y);
 	data.damp_y = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_damp_y);
 

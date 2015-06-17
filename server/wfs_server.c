@@ -310,6 +310,10 @@ int main(int argc, char **argv)
 
 	if (use_cameralink) andor_start_camlink_thread(); 
 
+	/* Start the labao tiptilt thread */
+
+	initialize_labao_tiptilt();
+
 	/* Read in the last positions for the reference centroids */
 
 	wfs_load_ref_centroids(NULL);
@@ -337,8 +341,10 @@ int main(int argc, char **argv)
 	wfs_tiptilt_modulation.which = WFS_MODULATION_NONE;
 
 	wfs_tiptilt_servo.gain_x = DEFAULT_GAIN_X;
+	wfs_tiptilt_servo.labao_x = 0.0;
 	wfs_tiptilt_servo.damp_x = DEFAULT_DAMP_X;
 	wfs_tiptilt_servo.gain_y = DEFAULT_GAIN_Y;
+	wfs_tiptilt_servo.labao_y = 0.0;
 	wfs_tiptilt_servo.damp_y = DEFAULT_DAMP_Y;
 	wfs_tiptilt_servo.on = FALSE;
 	wfs_tiptilt_servo.send = FALSE;
@@ -361,6 +367,10 @@ int main(int argc, char **argv)
 
 void close_function(void)
 {
+	/* Stop the labao tiptilt thread */
+
+	stop_labao_tiptilt();
+
 	/* Stop the USB thread */
 
 	andor_stop_usb();
