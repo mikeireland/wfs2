@@ -103,6 +103,13 @@ void set_wfs_messages(void)
                 exit(-8);
         }
 
+        if (!add_message_job(server, WFS_SUBAP_GET_CENTROIDS_OFFSET,
+			message_wfs_subap_get_centroids_offset))
+        {
+                fprintf(stderr, "Failed to add WFS_SUBAP_GET_CENTROIDS_OFFSET job.\n");
+                exit(-8);
+        }
+
 	if (!add_message_job(server, WFS_TEXT_MESSAGE,
                 message_wfs_text_message))
         {
@@ -260,6 +267,26 @@ int message_wfs_subap_get_centroids(int server, struct smessage *mess)
         return NOERROR;
 
 } /* message_wfs_subap_get_centroids() */
+
+/************************************************************************/
+/* message_wfs_subap_get_centroids_offset()                             */
+/*                                                                      */
+/************************************************************************/
+
+int message_wfs_subap_get_centroids_offset(int server, struct smessage *mess)
+{
+        if (mess->length != sizeof(struct s_wfs_subap_centroids))
+        {
+                print_status(ERROR,
+                "Got WFS_SUBAP_GET_CENTROIDS_OFFSET message with bad data.\n");
+                return NOERROR;
+        }
+
+	subap_centroids_offset = *((struct s_wfs_subap_centroids*)mess->data);
+
+        return NOERROR;
+
+} /* message_wfs_subap_get_centroids_offset() */
 
 /************************************************************************/
 /* message_wfs_text_message()                                           */

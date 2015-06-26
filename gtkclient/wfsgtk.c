@@ -55,6 +55,7 @@ GtkWidget *temp_label;
 int send_ready_for_display = FALSE;
 int movie_running = FALSE;
 struct s_wfs_subap_centroids subap_centroids_ref;
+struct s_wfs_subap_centroids subap_centroids_offset;
 struct s_wfs_subap_centroids subap_centroids;
 bool show_boxes = TRUE;
 GtkWidget *message_label;

@@ -263,6 +263,7 @@ void *do_labao_tiptilt(void *arg)
 	int	num_bytes;
 	time_t last_time = 0;
 	float	dt;
+	static float	delta_x = 0.0, delta_y = 0.0;
 	int data_receive_count = 0;
 
 	/* Initialize */
@@ -357,6 +358,52 @@ void *do_labao_tiptilt(void *arg)
 		labao_tiptilt_Az = (float)data[0]/(float)TIPTILT_MAX_VALUE;
 		labao_tiptilt_El = (float)data[1]/(float)TIPTILT_MAX_VALUE;
 		pthread_mutex_unlock(&labao_tiptilt_mutex);
+
+		/* Is the servo ON? */
+
+		if (wfs_tiptilt_servo.on)
+		{
+		    delta_x =  wfs_tiptilt_servo.labao_x * labao_tiptilt_Az -
+                        wfs_tiptilt_servo.damp_x * delta_x;
+		    delta_y =  wfs_tiptilt_servo.labao_y * labao_tiptilt_El -
+                        wfs_tiptilt_servo.damp_y * delta_y;
+
+		    /* Don't move too far */
+
+		    if (delta_x > 1.0)
+			delta_x = 1.0;
+		    else if (delta_x < -1.0)
+			delta_x = -1.0;
+
+		    if (delta_y > 1.0)
+			delta_y = 1.0;
+		    else if (delta_y < -1.0)
+			delta_y = -1.0;
+
+		    /* Impliment this */
+
+		    for(i = 0; i < WFS_DFT_SUBAP_NUMBER; i++)
+        	    {
+		    	subap_centroids_offset.x[i] += delta_x;
+		    	subap_centroids_offset.y[i] += delta_y;
+			subap_centroids_offset.xp[i]= 
+				(int)(subap_centroids_offset.x[i] + 0.5);
+			subap_centroids_offset.yp[i] = 
+				(int)(subap_centroids_offset.y[i] + 0.5);
+		    }
+		}
+		else
+		{
+		    delta_x = 0.0;
+		    delta_y = 0.0;
+		    for(i = 0; i < WFS_DFT_SUBAP_NUMBER; i++)
+        	    {
+		    	subap_centroids_offset.x[i] = 0.0;
+		    	subap_centroids_offset.y[i] = 0.0;
+		    	subap_centroids_offset.xp[i] = 0;
+		    	subap_centroids_offset.yp[i] = 0;
+		    }
+		}
 	}
 
 	return NULL;
@@ -371,9 +418,25 @@ void *do_labao_tiptilt(void *arg)
 
 void current_labao_tiptilt(float *az, float *el)
 {
+	static float last_Az = 0.0, last_El = 0.0;
+
 	pthread_mutex_lock(&labao_tiptilt_mutex);
-	*az = labao_tiptilt_Az;
-	*el = labao_tiptilt_El;
+
+	/* We dont' want to use the same one twice */
+
+	if (last_Az == labao_tiptilt_Az && last_El == labao_tiptilt_El)
+	{
+		*az = 0.0;
+		*el = 0.0;
+	}
+	else
+	{
+		*az = labao_tiptilt_Az;
+		*el = labao_tiptilt_El;
+	}
+	last_Az = labao_tiptilt_Az;
+	last_El = labao_tiptilt_El;
+	
 	pthread_mutex_unlock(&labao_tiptilt_mutex);
 
 } /* current_labao_tiptilt() */

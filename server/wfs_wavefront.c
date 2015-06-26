@@ -256,10 +256,20 @@ void calculate_centroids()
 	float	flux, max;
 	static  int mean_count = 32700;
 	static struct s_wfs_subap_centroids subap_centroids_calc;
+	float   x, y;
+	int	xp, yp;
 
 
 	for(subap = 0; subap < WFS_DFT_SUBAP_NUMBER; subap++)
 	{
+	    /* Add the labao offset if there is one */
+
+	    x = subap_centroids_ref.x[subap] + subap_centroids_offset.x[subap];
+	    y = subap_centroids_ref.y[subap] + subap_centroids_offset.y[subap];
+
+	    xp =  (int)(x + 0.5);
+	    yp =  (int)(y + 0.5);
+
 	    if (centroid_type == CENTROID_NONLINEAR)
 	    {
 		/* Find the maximum pixel in the box */
@@ -268,8 +278,8 @@ void calculate_centroids()
 		for(i = pix_mask_min; i <= pix_mask_max; i++)
 		for(j = pix_mask_min; j <= pix_mask_max; j++)
 		{
-		    k = i + subap_centroids_ref.xp[subap];
-		    l = j + subap_centroids_ref.yp[subap];
+		    k = i + xp;
+		    l = j + yp;
 
 		    if (k > 0 && k <= andor_setup.npixx && 
 			l > 0 && l <= andor_setup.npixy &&
@@ -285,8 +295,8 @@ void calculate_centroids()
 	    {
 		/* In this case we just use the center of the box */
 
-		max_i = subap_centroids_ref.xp[subap];
-		max_j = subap_centroids_ref.yp[subap];
+		max_i = xp;
+		max_j = yp;
 	    }
 
 	    /* Compute the center of gravity around this position */
@@ -316,8 +326,8 @@ void calculate_centroids()
 
 	    if (flux < clamp_fluxes.min_flux_subap)
 	    {
-		subap_centroids.x[subap] = subap_centroids_ref.x[subap];
-		subap_centroids.y[subap] = subap_centroids_ref.y[subap];
+		subap_centroids.x[subap] = x;
+		subap_centroids.y[subap] = y;
 	    }
 	    else if (flux < clamp_fluxes.clamp_flux_subap)
 	    {

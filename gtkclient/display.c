@@ -58,7 +58,7 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	int	i,j;
 	float   *pf1;
 	char	*pc1, *pc2;
-	float	max, min;
+	float	x, y, max, min;
 	int	pixmult = 1;
 
 	/* Do we do anything at all? */
@@ -200,14 +200,16 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	    {
 		min = (float)subap_centroids_ref.size/2.0;
 
+		x = subap_centroids_ref.x[i] + subap_centroids_offset.x[i];
+		y = subap_centroids_ref.y[i] + subap_centroids_offset.y[i];
+
 		overlay_rectangle(andor_setup.npixx*pixmult,
 			andor_setup.npixy*pixmult, picture, 
-			(subap_centroids_ref.x[i] - min - 0.5)*pixmult,
-                        (andor_setup.npixy - subap_centroids_ref.y[i] - 
-			min + 0.5)*pixmult,
-                        (subap_centroids_ref.x[i] + min - 0.5)*pixmult,
-                        (andor_setup.npixy - subap_centroids_ref.y[i] + 
-			min + 0.5)*pixmult, -1,PLOT_GREEN);
+			(x - min - 0.5)*pixmult,
+                        (andor_setup.npixy - y - min + 0.5)*pixmult,
+                        (x + min - 0.5)*pixmult,
+                        (andor_setup.npixy - y + min + 0.5)*pixmult,
+			-1,PLOT_GREEN);
 
 		overlay_rectangle(andor_setup.npixx*pixmult,
 			andor_setup.npixy*pixmult, picture, 

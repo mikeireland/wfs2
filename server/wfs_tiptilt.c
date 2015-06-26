@@ -47,13 +47,17 @@ void calculate_tiptilt(void)
 	static float xmirr = 0.0, ymirr = 0.0, xmirr2 = 0.0, ymirr2 = 0.0;
 	float	mir_var = 0.0;
 	float	rad, num = 0.0;
+	float	x[WFS_DFT_SUBAP_NUMBER];
+	float	y[WFS_DFT_SUBAP_NUMBER];
 
 	/* Find the pupil center */
 
 	for(subap = 0; subap < WFS_DFT_SUBAP_NUMBER; subap++)
         {
-		x_mean_offset += subap_centroids_ref.x[subap];
-		y_mean_offset += subap_centroids_ref.y[subap];
+		x_mean_offset += (x[subap] = subap_centroids_ref.x[subap] +
+			subap_centroids_offset.x[subap]);
+		y_mean_offset =  (y[subap] = subap_centroids_ref.y[subap] +
+			subap_centroids_offset.y[subap]);
 	}
 	x_mean_offset /= WFS_DFT_SUBAP_NUMBER;
 	y_mean_offset /= WFS_DFT_SUBAP_NUMBER;
@@ -65,8 +69,8 @@ void calculate_tiptilt(void)
 	num = 0.0;
 	for(subap = 0; subap < WFS_DFT_SUBAP_NUMBER; subap++)
         {
-		x_offset = subap_centroids_ref.x[subap] - x_mean_offset;
-		y_offset = subap_centroids_ref.y[subap] - y_mean_offset;
+		x_offset = x[subap] - x_mean_offset;
+		y_offset = y[subap] - y_mean_offset;
 
 		if (rad > 0 && rad < x_offset*x_offset + y_offset*y_offset)
 			continue;
@@ -76,10 +80,8 @@ void calculate_tiptilt(void)
 		if (fabs(x_offset) > max_offset) max_offset = fabs(x_offset);
 		if (fabs(y_offset) > max_offset) max_offset = fabs(y_offset);
 
-		xtilt += (dx = subap_centroids.x[subap] - 
-				subap_centroids_ref.x[subap]);
-		ytilt += (dy = subap_centroids.y[subap] - 
-				subap_centroids_ref.y[subap]);
+		xtilt += (dx = subap_centroids.x[subap] - x[subap]);
+		ytilt += (dy = subap_centroids.y[subap] - y[subap]);
 
 		total_flux += subap_centroids.inten[subap];
 
@@ -346,8 +348,10 @@ void servo_tiptilt(void)
 	{
 	    /* Force it to zero */
 
-	    delta_x = -1.0 * wfs_tiptilt.correctx;
-	    delta_y = -1.0 * wfs_tiptilt.correcty;
+	    delta_x = 0.0;
+	    delta_y = 0.0;
+	    wfs_tiptilt.correctx = 0.0;
+	    wfs_tiptilt.correcty = 0.0;
 	}
 	   
 	/* We only alow a certain maximum change in mirror position */
@@ -375,8 +379,6 @@ void servo_tiptilt(void)
 		wfs_tiptilt.correcty = -1.0 * MAX_MIRROR;
 
 	/* Send this to the scope if we can */
-
-#warning X and Y were reversed on old server
 
 	if (wfs_tiptilt_servo.send)
 		send_tiptilt_data(wfs_tiptilt.correctx, wfs_tiptilt.correcty);

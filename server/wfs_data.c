@@ -68,8 +68,6 @@ void process_data(long time_stamp, int nx, int ny, unsigned short int *ccd)
 
 	/* Copy the data over */
 
-#warning This seems to be reversing the Y axis
-        //for(pi1 = image_data, j=andor_setup.npixy; j > 0; j--)
         for(pi1 = image_data, j = 1; j <= andor_setup.npixy; j++)
         for(i = 1; i <= andor_setup.npixx; i++)
 	{
@@ -570,6 +568,7 @@ void complete_data_record(void)
         long int naxis;
         long int naxes[3];
 	fitsfile *fptr;
+	float	x,y;
 
 	/* Have we finished? */
 
@@ -683,9 +682,8 @@ void complete_data_record(void)
 		sprintf(s1,"WFSXRF%02d", i+1);
 		sprintf(s2,"X position reference centroid %02d", i+1);
 
-		if(fits_update_key(fptr, TFLOAT, s1,
-                        &(subap_centroids_ref.x[i]),
-                        s2,&fits_status))
+		x = subap_centroids_ref.x[i] + subap_centroids_offset.x[i];
+		if(fits_update_key(fptr, TFLOAT, s1, &x, s2,&fits_status))
 		{
 			error(ERROR,"Failed to write %s (%d).", s1,fits_status);
 		}
@@ -693,9 +691,8 @@ void complete_data_record(void)
 		sprintf(s1,"WFSYRF%02d", i+1);
 		sprintf(s2,"Y position reference centroid %02d", i+1);
 
-		if(fits_update_key(fptr, TFLOAT, s1,
-                        &(subap_centroids_ref.y[i]),
-                        s2,&fits_status))
+		y = subap_centroids_ref.y[i] + subap_centroids_offset.y[i];
+		if(fits_update_key(fptr, TFLOAT, s1, &y, s2, &fits_status))
 		{
 			error(ERROR,"Failed to write %s (%d).", s1,fits_status);
 		}

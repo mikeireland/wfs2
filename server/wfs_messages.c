@@ -362,6 +362,18 @@ int message_wfs_andor_current_frame(struct smessage *message)
 
 	/* Make sure they know the calculated centroids */
 
+	mess.type = WFS_SUBAP_GET_CENTROIDS_OFFSET;
+	mess.length = sizeof(struct s_wfs_subap_centroids);
+        mess.data = (unsigned char *)&subap_centroids_offset;
+
+	if (server_send_message(active_socket, &mess) != NOERROR)
+        {
+                return error(ERROR,
+                        "Failed to send current subap centroid offsets.");
+        }
+
+	/* Make sure they know the calculated centroids */
+
 	mess.type = WFS_SUBAP_GET_CENTROIDS;
 	mess.length = sizeof(struct s_wfs_subap_centroids);
         mess.data = (unsigned char *)&subap_centroids;
@@ -372,7 +384,7 @@ int message_wfs_andor_current_frame(struct smessage *message)
                         "Failed to send current subap centroids.");
         }
 
-	/* First, find the max and min to limited number of grey scale values...*/
+	/* First, find the max and min to limited number of grey scale values.*/
 
 	min_cnts = 1e8;
 	max_cnts = -1e8;
@@ -908,6 +920,12 @@ int message_wfs_subap_calc_centroids_ref(struct smessage *mess)
           return error(ERROR,
 	       "Wrong number of data bytes in WFS_SUBAP_CALC_CENTROIDS_REF");
         }
+
+	if (wfs_tiptilt_servo.on)
+	{
+          send_wfs_text_message("Servo must be off to set centroids");
+          return error(WARNING,"Servo must be off to set centroids");
+	}
 
 	set_subap_centroids_ref = TRUE;
 

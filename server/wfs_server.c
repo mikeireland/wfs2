@@ -51,6 +51,7 @@ float data_threshold = -1e32;
 struct s_wfs_tdc_status tdc_status;
 struct s_wfs_subap_centroids subap_centroids_mean;
 struct s_wfs_subap_centroids subap_centroids_ref;
+struct s_wfs_subap_centroids subap_centroids_offset;
 struct s_wfs_subap_centroids subap_centroids;
 struct s_wfs_clamp_fluxes clamp_fluxes;
 struct s_wfs_tiptilt wfs_tiptilt;
@@ -702,14 +703,23 @@ int wfs_load_ref_centroids(char *file)
 			subap_centroids_ref.xp[index],
 			subap_centroids_ref.yp[index]);
 	    }
+	    subap_centroids_offset.x[index] = 0.0;
+	    subap_centroids_offset.y[index] = 0.0;
+	    subap_centroids_offset.xp[index] = 0;
+	    subap_centroids_offset.yp[index] = 0;
 	}
 
 	fclose(f);
 
 	subap_centroids_ref.num = index+1;
 	subap_centroids_ref.size = WFS_DFT_SUBAP_SIZE;
+	subap_centroids_offset.num = index+1;
+	subap_centroids_offset.size = WFS_DFT_SUBAP_SIZE;
 	for(i=0; i < WFS_DFT_SUBAP_NUMBER; i++)
+	{
 		subap_centroids_ref.inten[i] = 0.0;
+		subap_centroids_offset.inten[i] = 0.0;
+	}
 
 	subap_centroids = subap_centroids_ref;
 

@@ -123,6 +123,7 @@ extern float data_threshold; /* For data in terms of STDDEV of dark frame. */
 extern struct s_wfs_tdc_status tdc_status;
 extern struct s_wfs_subap_centroids subap_centroids_mean;
 extern struct s_wfs_subap_centroids subap_centroids_ref;
+extern struct s_wfs_subap_centroids subap_centroids_offset;
 extern struct s_wfs_subap_centroids subap_centroids;
 extern struct s_wfs_clamp_fluxes clamp_fluxes;
 extern struct s_wfs_tiptilt wfs_tiptilt;
