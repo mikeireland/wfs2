@@ -412,11 +412,6 @@ void fill_wfs_page(GtkWidget *vbox)
         gtk_widget_set_usize (button, WFS_WIDTH/8, WFS_HEIGHT);
         gtk_widget_show(button);
 
-        label = gtk_label_new("");
-        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
-        gtk_widget_show(label);
-
 	button = gtk_button_new_with_label ("SEND");
         gtk_signal_connect (GTK_OBJECT (button), "clicked",
                GTK_SIGNAL_FUNC (wfs_set_servo_callback), NULL);
@@ -424,6 +419,15 @@ void fill_wfs_page(GtkWidget *vbox)
         gtk_container_set_border_width (GTK_CONTAINER (button), 1);
         gtk_widget_set_usize (button, WFS_WIDTH/8, WFS_HEIGHT);
         gtk_widget_show(button);
+
+	button = gtk_button_new_with_label ("ZERO TT");
+	gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_message_callback),
+                (gpointer)(message_array+WFS_ZERO_TIPTILT) );
+	gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+	gtk_container_set_border_width (GTK_CONTAINER (button), 1);
+	gtk_widget_set_usize(button, WFS_WIDTH/8, WFS_HEIGHT);
+	gtk_widget_show(button);
 
         /* Row 7 */
 
@@ -856,10 +860,14 @@ void update_tiptilt_servo(void)
 {
 	gtk_spin_button_set_value((GtkSpinButton *)entry_gain_x,
                         wfs_tiptilt_servo.gain_x);
+	gtk_spin_button_set_value((GtkSpinButton *)entry_labao_x,
+                        wfs_tiptilt_servo.labao_x);
 	gtk_spin_button_set_value((GtkSpinButton *)entry_damp_x,
                         wfs_tiptilt_servo.damp_x);
 	gtk_spin_button_set_value((GtkSpinButton *)entry_gain_y,
                         wfs_tiptilt_servo.gain_y);
+	gtk_spin_button_set_value((GtkSpinButton *)entry_labao_y,
+                        wfs_tiptilt_servo.labao_y);
 	gtk_spin_button_set_value((GtkSpinButton *)entry_damp_y,
                         wfs_tiptilt_servo.damp_y);
 

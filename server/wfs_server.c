@@ -548,6 +548,8 @@ int wfs_periodic_job(void)
 			sqrt(data2_mean - data_mean*data_mean));
 		error(MESSAGE,"Max = %.1f (%d, %d) Min = %.1f (%d, %d)",
 			max, maxx, maxy, min, minx, miny);
+		error(MESSAGE,"LABAO tiptilt receive rate = %.1f", 
+			current_labao_receive_rate());
 	    }
 	}
 

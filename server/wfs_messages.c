@@ -104,6 +104,7 @@ void setup_wfs_messages(void)
 	server_add_message_job(WFS_SET_SEND, message_wfs_set_send);
 	server_add_message_job(WFS_SAVE_TIPTILT, message_wfs_save_tiptilt);
 	server_add_message_job(WFS_SAVE_DATA, message_wfs_save_data);
+	server_add_message_job(WFS_ZERO_TIPTILT, message_wfs_zero_tiptilt);
 
 } /* setup_wfs_messages() */
 
@@ -1035,7 +1036,11 @@ int message_wfs_closeloop_message(struct smessage *mess)
 	if (*((int *)mess->data))
 		wfs_tiptilt_servo.on = TRUE;
 	else
+	{
 		wfs_tiptilt_servo.on = FALSE;
+		wfs_tiptilt.correctx = 0.0;
+		wfs_tiptilt.correcty = 0.0;
+	}
 	
         message.type = WFS_SET_SERVO;
         message.length = sizeof(struct s_wfs_tiptilt_servo);
@@ -1079,6 +1084,28 @@ int message_wfs_set_send(struct smessage *mess)
                 return error(ERROR, "Failed to send current servo parameters.");
         }
 
+	return NOERROR;
+
+} /* message_wfs_set_send() */
+
+/************************************************************************/
+/* int message_wfs_zero_tiptilt()	                        	*/
+/*                                                                      */
+/* Zero tiptilt position.						*/
+/************************************************************************/
+
+int message_wfs_zero_tiptilt(struct smessage *mess)
+{
+        struct smessage message;
+
+        if (mess->length !=  0)
+        {
+          return error(ERROR, "Wrong number of data bytes in WFS_ZERO_TIPTILT");
+        }
+
+	wfs_tiptilt.correctx = 0.0;
+	wfs_tiptilt.correcty = 0.0;
+	
 	return NOERROR;
 
 } /* message_wfs_set_send() */

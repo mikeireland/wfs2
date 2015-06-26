@@ -186,6 +186,7 @@ int message_wfs_set_servo(struct smessage *mess);
 int message_wfs_get_servo(struct smessage *mess);
 int message_wfs_closeloop_message(struct smessage *mess);
 int message_wfs_set_send(struct smessage *mess);
+int message_wfs_zero_tiptilt(struct smessage *mess);
 
 /* wfs_andor.c */
 
