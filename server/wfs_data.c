@@ -51,8 +51,7 @@ static int data_record_stop = 0;
 /* be locked while it is running. 					*/
 /************************************************************************/
 
-#warning Most of these parameters seem to not be used at all
-void process_data(long time_stamp, int nx, int ny, unsigned short int *ccd)
+void process_data(long time_stamp)
 {
 	static time_t last_time = 0;
 	static int dark_frame_count = 0;

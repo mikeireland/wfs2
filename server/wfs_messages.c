@@ -1064,7 +1064,7 @@ int message_wfs_closeloop_message(struct smessage *mess)
         message.length = sizeof(struct s_wfs_tiptilt_servo);
         message.data = (unsigned char *)&wfs_tiptilt_servo;
 
-	if (server_send_message(active_socket, &message) != NOERROR)
+	if (server_send_message_all(&message) != NOERROR)
         {
                 return error(ERROR, "Failed to send current servo parameters.");
         }
@@ -1114,8 +1114,6 @@ int message_wfs_set_send(struct smessage *mess)
 
 int message_wfs_zero_tiptilt(struct smessage *mess)
 {
-        struct smessage message;
-
         if (mess->length !=  0)
         {
           return error(ERROR, "Wrong number of data bytes in WFS_ZERO_TIPTILT");

@@ -321,25 +321,25 @@ int main(int  argc, char *argv[] )
 	aber_button[0] = gtk_check_button_new_with_label("");
         gtk_box_pack_start(GTK_BOX(hbox), aber_button[0], TRUE, TRUE, 0);
         gtk_container_set_border_width (GTK_CONTAINER (aber_button[0]), 1);
-        gtk_widget_set_usize (aber_button[0],WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_set_usize (aber_button[0],WFS_WIDTH/24, WFS_HEIGHT);
         gtk_toggle_button_set_active((GtkToggleButton *)aber_button[0], 1);
         gtk_widget_show (aber_button[0]);
 
         tilt_x_label = gtk_label_new("");
         gtk_box_pack_start(GTK_BOX(hbox), tilt_x_label , TRUE, TRUE, 0);
-        gtk_widget_set_usize (tilt_x_label, 3*WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_set_usize (tilt_x_label, 3*WFS_WIDTH/24, WFS_HEIGHT);
         gtk_widget_show(tilt_x_label);
 
         aber_button[1] = gtk_check_button_new_with_label("");
         gtk_box_pack_start(GTK_BOX(hbox), aber_button[1], TRUE, TRUE, 0);
         gtk_container_set_border_width (GTK_CONTAINER (aber_button[1]), 1);
-        gtk_widget_set_usize (aber_button[1],WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_set_usize (aber_button[1],WFS_WIDTH/24, WFS_HEIGHT);
         gtk_toggle_button_set_active((GtkToggleButton *)aber_button[1], 1);
         gtk_widget_show (aber_button[1]);
 
         tilt_y_label = gtk_label_new("");
         gtk_box_pack_start(GTK_BOX(hbox), tilt_y_label , TRUE, TRUE, 0);
-        gtk_widget_set_usize (tilt_y_label, 3*WFS_WIDTH/20, WFS_HEIGHT);
+        gtk_widget_set_usize (tilt_y_label, 3*WFS_WIDTH/24, WFS_HEIGHT);
         gtk_widget_show(tilt_y_label);
 
 	aber_button[2] = gtk_check_button_new_with_label("");
@@ -1037,7 +1037,8 @@ void update_mean_aberrations(void)
         sprintf(s,"C1: %+5.2f", wfs_mean_aberrations.c2);
         gtk_label_set_text((GtkLabel *) c2_label, s);
 
-	sprintf(s,"r0 = %5.1f", wfs_mean_aberrations.r0);
+	sprintf(s,"%5.1f/%5.0f", wfs_mean_aberrations.r0,
+		wfs_mean_aberrations.flux);
         gtk_label_set_text((GtkLabel *) r0_label, s);
 
         if (plot_aber)

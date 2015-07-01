@@ -64,6 +64,7 @@ struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
 bool fake_mirror = FALSE;
 float max_radius = 0.0;
 bool new_mean_aberrations = FALSE;
+bool send_tiptilt_servo = FALSE;
 
 int main(int argc, char **argv)
 {
@@ -523,12 +524,17 @@ int wfs_periodic_job(void)
 	    data_mean /= n;
 	    data2_mean /= n;
 
+	    if (send_tiptilt_servo)
+	    {
+        	mess.type = WFS_SET_SERVO;
+        	mess.length = sizeof(struct s_wfs_tiptilt_servo);
+        	mess.data = (unsigned char *)&wfs_tiptilt_servo;
+		server_send_message_all(&mess);
+		send_tiptilt_servo = FALSE;
+	    }
+
 	    send_wfs_text_message(
-		"(%.1f,%.1f) (%.1f,%.1f) Data mean = %.1f+-%.1f Max = %.1f Min = %.1f", 
-			subap_centroids.x[0],
-			subap_centroids.y[0],
-			subap_centroids_ref.x[0],
-			subap_centroids_ref.y[0],
+		"Data mean = %.1f+-%.1f Max = %.1f Min = %.1f", 
 			data_mean,
 			sqrt(data2_mean - data_mean*data_mean),
 			max, maxx, maxy, min, minx, miny);
@@ -550,7 +556,7 @@ int wfs_periodic_job(void)
 		error(MESSAGE,"Max = %.1f (%d, %d) Min = %.1f (%d, %d)",
 			max, maxx, maxy, min, minx, miny);
 		error(MESSAGE,"LABAO tiptilt receive rate = %.1f", 
-			current_labao_receive_rate());
+	 		current_labao_receive_rate());
 	    }
 	}
 
@@ -617,6 +623,11 @@ int wfs_write_ref_centroids(char *file)
 					  clamp_fluxes.min_flux_subap,
 					  clamp_fluxes.clamp_flux_subap);
 
+	/* Minimum flux for tiptilt servo */
+
+	fprintf(f, "# Minimum flux for tiptilt servo\n");
+	fprintf(f, "%10.1f\n", wfs_tiptilt_servo.min_flux);
+
 	/* Now the centroids */
 
 	fprintf(f,"%10s %10s %10s %10s %10s\n", 
@@ -676,6 +687,10 @@ int wfs_load_ref_centroids(char *file)
 		&clamp_fluxes.clamp_flux_subap) != 3)
 		return error(ERROR,"Failed to get clamp_fluxes");
 
+	if (getline_cs(s, 256, f) == (char *)EOF || sscanf(s,"%f",
+	 	&(wfs_tiptilt_servo.min_flux)) != 1)
+		return error(ERROR,"Failed to get minimum tiptilt flux");
+
 	if (verbose) 
 	{
 		error(MESSAGE,"Denom clamp subap = %.1f",
@@ -684,6 +699,8 @@ int wfs_load_ref_centroids(char *file)
 			clamp_fluxes.min_flux_subap);
 		error(MESSAGE,"Clamp flux = %.1f",
 			clamp_fluxes.clamp_flux_subap);
+		error(MESSAGE,"Minimum tiptilt flux = %.1f",
+			wfs_tiptilt_servo.min_flux);
 	}
 
 	/* Now get the centroids themselves */

@@ -295,10 +295,7 @@ void *andor_usb_thread(void *arg)
 
 		    if (!andor_setup.camlink_running)
 		    {
-			process_data(chara_time_now(), 
-				andor_setup.npixx, 
-				andor_setup.npixy, 
-				image_data);
+			process_data(chara_time_now()); 
 		    }
 		    else
 		    {

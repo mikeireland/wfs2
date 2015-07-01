@@ -136,6 +136,7 @@ extern struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
 extern bool fake_mirror;
 extern float max_radius;
 extern bool new_mean_aberrations;
+extern bool send_tiptilt_servo;
 
 
 /* Prototypes */
@@ -176,7 +177,6 @@ int message_wfs_subap_send_centroids_ref(struct smessage *message);
 int message_wfs_subap_shift_rot_scale_centroids_ref(struct smessage *message);
 int message_wfs_subap_write_centroids_ref(struct smessage *message);
 int message_wfs_subap_load_centroids_ref(struct smessage *message);
-void send_wfs_text_message(char *fmt, ...);
 int message_wfs_open_tt_data_socket(struct smessage *message);
 int message_wfs_get_clamp_fluxes(struct smessage *message);
 int message_wfs_subap_calc_centroids_ref(struct smessage *mess);
@@ -237,7 +237,7 @@ void unlock_usb_mutex(void);
 
 /* wfs_data.c */
 
-void process_data(long time_stamp, int nx, int ny, unsigned short int *data);
+void process_data(long time_stamp);
 int message_wfs_take_background(struct smessage *message);
 int message_wfs_reset_background(struct smessage *message);
 int message_wfs_set_threshold(struct smessage *message);

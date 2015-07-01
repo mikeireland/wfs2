@@ -319,10 +319,7 @@ void *andor_camlink_thread(void *arg)
 
 			/* Here is the place holder call for the WFS */
 
-			process_data(chara_time_now(), 
-				andor_setup.npixx, 
-				andor_setup.npixy, 
-				image_data);
+			process_data(chara_time_now()); 
 		    }
 
 		    /* Give other threads some time */

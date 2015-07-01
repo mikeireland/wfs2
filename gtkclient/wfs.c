@@ -36,6 +36,7 @@ static GtkWidget *entry_num_frames = NULL;
 static GtkWidget *entry_display_delay = NULL;
 static GtkWidget *entry_num_mean = NULL;
 static GtkWidget *entry_num_save_tt = NULL;
+static GtkWidget *entry_min_flux = NULL;
 static GtkWidget *entry_num_save_data = NULL;
 static GtkWidget *entry_gain_x = NULL;
 static GtkWidget *entry_labao_x = NULL;
@@ -43,11 +44,8 @@ static GtkWidget *entry_damp_x = NULL;
 static GtkWidget *entry_gain_y = NULL;
 static GtkWidget *entry_labao_y = NULL;
 static GtkWidget *entry_damp_y = NULL;
-
-#define NUM_SERVO  2
-static char *servo_names[NUM_SERVO] = {"OFF", "ON"};
-static GtkWidget *servo_buttons[NUM_SERVO] = {NULL, NULL};
-static GtkWidget *send_buttons[NUM_SERVO] = {NULL, NULL};
+static GtkWidget *servo_label = NULL;
+static GtkWidget *send_label = NULL;
 
 /************************************************************************/
 /* void fill_wfs_page(GtkWidget *vbox);					*/
@@ -61,9 +59,6 @@ void fill_wfs_page(GtkWidget *vbox)
 	GtkWidget *button;
 	GtkWidget *hbox;
 	GtkObject *adjustment;
-        GSList    *servo_group = NULL;
-        GSList    *send_group = NULL;
-	int	  i;
 
 	/* First row */
 
@@ -266,72 +261,72 @@ void fill_wfs_page(GtkWidget *vbox)
 
         label = gtk_label_new("X Gain:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_gain_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_gain_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_gain_x, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_gain_x, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_gain_x, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(entry_gain_x);
 
         label = gtk_label_new("X LabAo:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_labao_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_labao_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_labao_x, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_labao_x, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_labao_x, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(entry_labao_x);
 
         label = gtk_label_new("X Damp:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, 0.0, 1.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_damp_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_damp_x =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_damp_x, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_damp_x, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_damp_x, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(entry_damp_x);
 
         label = gtk_label_new("Y Gain:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_gain_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_gain_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_gain_y, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_gain_y, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_gain_y, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(entry_gain_y);
 
         label = gtk_label_new("Y LabAo:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, -5.0, 5.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_labao_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_labao_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_labao_y, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_labao_y, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (entry_labao_y, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(entry_labao_y);
 
         label = gtk_label_new("Y Damp:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/10, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/12, WFS_HEIGHT);
         gtk_widget_show(label);
 			/* Value, min, max, step, pageup, pagedown */
         adjustment = gtk_adjustment_new(0, 0.0, 1.0, 0.01, .1, 0);
 			/* Climb Rate, Digits */
-        entry_damp_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,4);
+        entry_damp_y =gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,2);
         gtk_box_pack_start(GTK_BOX(hbox), entry_damp_y, TRUE, TRUE, 0);
         gtk_widget_set_usize (entry_damp_y, WFS_WIDTH/10, WFS_HEIGHT);
         gtk_widget_show(entry_damp_y);
@@ -342,75 +337,28 @@ void fill_wfs_page(GtkWidget *vbox)
         gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
         gtk_widget_show(hbox);
 
-        /* And a series of radio buttons for the Servo control */
+        servo_label = gtk_label_new("Servo");
+        gtk_box_pack_start(GTK_BOX(hbox), servo_label, TRUE, TRUE, 0);
+        gtk_widget_set_usize (servo_label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_show(servo_label);
 
-        label = gtk_label_new("Servo:");
+        send_label = gtk_label_new("Send");
+        gtk_box_pack_start(GTK_BOX(hbox), send_label, TRUE, TRUE, 0);
+        gtk_widget_set_usize (send_label, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_show(send_label);
+
+        label = gtk_label_new("Min Flux:");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, 1.17*WFS_WIDTH/12, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/8, WFS_HEIGHT);
         gtk_widget_show(label);
-
-        for(i=0; i<NUM_SERVO; i++)
-        {
-                servo_buttons[i] =
-                        gtk_radio_button_new_with_label(servo_group,
-			servo_names[i]);
-                servo_group = gtk_radio_button_group(
-                        GTK_RADIO_BUTTON(servo_buttons[i]));
-                gtk_widget_ref (servo_buttons[i]);
-                gtk_object_set_data_full (GTK_OBJECT (hbox),
-                        servo_names[i],
-                        servo_buttons[i],
-                        (GtkDestroyNotify) gtk_widget_unref);
-                gtk_box_pack_start(GTK_BOX (hbox),
-                        servo_buttons[i],
-                        FALSE, FALSE, 0);
-                gtk_widget_set_usize (servo_buttons[i],
-                        WFS_WIDTH/12, WFS_HEIGHT);
-                gtk_widget_show(servo_buttons[i]);
-        }
-
-        /* And a series of radio buttons for the Send control */
-
-        label = gtk_label_new("Send:");
-        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, 1.17*WFS_WIDTH/12, WFS_HEIGHT);
-        gtk_widget_show(label);
-
-        for(i=0; i<NUM_SERVO; i++)
-        {
-                send_buttons[i] =
-                        gtk_radio_button_new_with_label(send_group,
-			servo_names[i]);
-                send_group = gtk_radio_button_group(
-                        GTK_RADIO_BUTTON(send_buttons[i]));
-                gtk_widget_ref (send_buttons[i]);
-                gtk_object_set_data_full (GTK_OBJECT (hbox),
-                        servo_names[i],
-                        send_buttons[i],
-                        (GtkDestroyNotify) gtk_widget_unref);
-                gtk_box_pack_start(GTK_BOX (hbox),
-                        send_buttons[i],
-                        FALSE, FALSE, 0);
-                gtk_widget_set_usize (send_buttons[i],
-                        WFS_WIDTH/12, WFS_HEIGHT);
-                gtk_widget_show(send_buttons[i]);
-        }
 
 			/* Value, min, max, step, pageup, pagedown */
-  	adjustment = gtk_adjustment_new(100, 1, 10000, 1.0, 0, 0);
-        entry_num_save_data =
+  	adjustment = gtk_adjustment_new(100, -10000, 10000, 1.0, 0, 0);
+        entry_min_flux =
 			gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,0);
-        gtk_box_pack_start(GTK_BOX(hbox), entry_num_save_data, TRUE, TRUE, 0);
-        gtk_widget_set_usize (entry_num_save_data,WFS_WIDTH/8, WFS_HEIGHT);
-        gtk_widget_show(entry_num_save_data);
-
-	button = gtk_button_new_with_label ("SAVE DATA");
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-               GTK_SIGNAL_FUNC (wfs_num_save_data_callback), NULL);
-        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
-        gtk_container_set_border_width (GTK_CONTAINER (button), 1);
-        gtk_widget_set_usize (button, WFS_WIDTH/8, WFS_HEIGHT);
-        gtk_widget_show(button);
+        gtk_box_pack_start(GTK_BOX(hbox), entry_min_flux, TRUE, TRUE, 0);
+        gtk_widget_set_usize (entry_min_flux,WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_show(entry_min_flux);
 
 	button = gtk_button_new_with_label ("SEND");
         gtk_signal_connect (GTK_OBJECT (button), "clicked",
@@ -428,6 +376,22 @@ void fill_wfs_page(GtkWidget *vbox)
 	gtk_container_set_border_width (GTK_CONTAINER (button), 1);
 	gtk_widget_set_usize(button, WFS_WIDTH/8, WFS_HEIGHT);
 	gtk_widget_show(button);
+
+			/* Value, min, max, step, pageup, pagedown */
+  	adjustment = gtk_adjustment_new(100, 1, 10000, 1.0, 0, 0);
+        entry_num_save_data =
+			gtk_spin_button_new((GtkAdjustment *)adjustment,1.0,0);
+        gtk_box_pack_start(GTK_BOX(hbox), entry_num_save_data, TRUE, TRUE, 0);
+        gtk_widget_set_usize (entry_num_save_data,WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_show(entry_num_save_data);
+
+	button = gtk_button_new_with_label ("SAVE");
+	gtk_signal_connect (GTK_OBJECT (button), "clicked",
+               GTK_SIGNAL_FUNC (wfs_num_save_data_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER (button), 1);
+        gtk_widget_set_usize (button, WFS_WIDTH/8, WFS_HEIGHT);
+        gtk_widget_show(button);
 
         /* Row 7 */
 
@@ -517,17 +481,17 @@ void fill_wfs_page(GtkWidget *vbox)
 
 void wfs_make_dark_callback(GtkButton *button, gpointer user_data)
 {
-	      struct smessage mess;
-	int	num;
+	struct smessage mess;
+   	int	num;
 
-	      /* The temperature is separate. */
+	/* The temperature is separate. */
 
-	      num =gtk_spin_button_get_value_as_int((GtkSpinButton *)entry_num_dark);
-	      mess.type = WFS_TAKE_BACKGROUND;
-	      mess.data = (unsigned char *)&num;
-	      mess.length = sizeof(int);
+	num =gtk_spin_button_get_value_as_int((GtkSpinButton *)entry_num_dark);
+	mess.type = WFS_TAKE_BACKGROUND;
+	mess.data = (unsigned char *)&num;
+	mess.length = sizeof(int);
 
-	      send_message(server, &mess);
+	send_message(server, &mess);
 
 } /* wfs_make_dark_callback() */
 
@@ -585,19 +549,19 @@ int message_wfs_set_threshold(int server, struct smessage *mess)
 
 void wfs_num_frames_callback(GtkButton *button, gpointer user_data)
 {
-	      struct smessage mess;
+	struct smessage mess;
 	int	num_frames;
 
-	      /* The temperature is separate. */
+	/* The temperature is separate. */
 
-	      num_frames = gtk_spin_button_get_value_as_int(
+	num_frames = gtk_spin_button_get_value_as_int(
 		(GtkSpinButton *)entry_num_frames);
 
-	      mess.type = WFS_SET_NUM_FRAMES;
-	      mess.data = (unsigned char *)&num_frames;
-	      mess.length = sizeof(num_frames);
+	mess.type = WFS_SET_NUM_FRAMES;
+	mess.data = (unsigned char *)&num_frames;
+	mess.length = sizeof(num_frames);
 
-	      send_message(server, &mess);
+	send_message(server, &mess);
 
 } /* wfs_num_frames_callback() */
 
@@ -810,24 +774,10 @@ void wfs_num_save_data_callback(GtkButton *budataon, gpointer user_data)
 void wfs_set_servo_callback(GtkButton *button, gpointer user_data)
 {
 	struct s_wfs_tiptilt_servo data;
-	int	i;
 	struct smessage mess;
 
-        data.on = FALSE;
-        for(i=0; i<NUM_SERVO; i++)
-        {
-                if (gtk_toggle_button_get_active((
-                        GtkToggleButton *)servo_buttons[i]))
-                        data.on = i;
-        }
-
-        data.send = FALSE;
-        for(i=0; i<NUM_SERVO; i++)
-        {
-                if (gtk_toggle_button_get_active((
-                        GtkToggleButton *)send_buttons[i]))
-                        data.send = i;
-        }
+        data.on = wfs_tiptilt_servo.on;
+        data.send = wfs_tiptilt_servo.send;
 
 	data.gain_x = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_gain_x);
@@ -841,6 +791,8 @@ void wfs_set_servo_callback(GtkButton *button, gpointer user_data)
 		(GtkSpinButton *)entry_labao_y);
 	data.damp_y = gtk_spin_button_get_value_as_float(
 		(GtkSpinButton *)entry_damp_y);
+	data.min_flux = gtk_spin_button_get_value_as_float(
+		(GtkSpinButton *)entry_min_flux);
 
       mess.type = WFS_SET_SERVO;
       mess.data = (unsigned char *)&data;
@@ -870,20 +822,18 @@ void update_tiptilt_servo(void)
                         wfs_tiptilt_servo.labao_y);
 	gtk_spin_button_set_value((GtkSpinButton *)entry_damp_y,
                         wfs_tiptilt_servo.damp_y);
+	gtk_spin_button_set_value((GtkSpinButton *)entry_min_flux,
+                        wfs_tiptilt_servo.min_flux);
 
 	if (wfs_tiptilt_servo.on)
-		gtk_toggle_button_set_active((GtkToggleButton *)
-                servo_buttons[1], 1);
+	        gtk_label_set_text((GtkLabel *)servo_label, "Servo ON");
 	else
-		gtk_toggle_button_set_active((GtkToggleButton *)
-                servo_buttons[0], 1);
+	        gtk_label_set_text((GtkLabel *)servo_label, "Servo OFF");
 
 	if (wfs_tiptilt_servo.send)
-		gtk_toggle_button_set_active((GtkToggleButton *)
-                send_buttons[1], 1);
+	        gtk_label_set_text((GtkLabel *)send_label, "Send ON");
 	else
-		gtk_toggle_button_set_active((GtkToggleButton *)
-                send_buttons[0], 1);
+	        gtk_label_set_text((GtkLabel *)send_label, "Send OFF");
 
 } /* update_tiptilt_servo() */
 

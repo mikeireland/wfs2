@@ -38,6 +38,7 @@ void calculate_tiptilt(void)
 	float	x_offset = 0.0, y_offset = 0.0, total_flux = 0.0;
 	float	max_flux = -1e32;
 	float	a1 = 0.0, a2 = 0.0, focus = 0.0;
+	float	c1 = 0.0, c2 = 0.0;
 	float	xtilt = 0.0, ytilt = 0.0;
 	float	dx, dy;
 	int	subap;
@@ -91,6 +92,10 @@ void calculate_tiptilt(void)
 		focus += (dx * x_offset + dy * y_offset);
 		a1 += (dx * x_offset - dy * y_offset);
 		a2 += (dy * x_offset + dx * y_offset);
+		c1 +=  dx*(9*x_offset*x_offset + 3*y_offset*y_offset-2)/9.0 + 
+                        dy*2*x_offset*y_offset/3.0;
+                c2 +=  dy*(9*y_offset*y_offset + 3*x_offset*x_offset-2)/9.0 + 
+                        dx*2*x_offset*y_offset/3.0;
 	}
 
 	/* Tilt needs to go between -1 and 1 */
@@ -100,6 +105,8 @@ void calculate_tiptilt(void)
 	focus /= (float)num;
 	a1 /= (float)num;
 	a2 /= (float)num;
+	c1 /= (float)num;
+	c2 /= (float)num;
 
 #warning We may also need to multiply by arcsecs per pixel
 
@@ -112,6 +119,8 @@ void calculate_tiptilt(void)
         focus /= max_offset;
         a1 /= max_offset;
         a2 /= max_offset;
+        c1 /= (max_offset * max_offset);
+        c2 /= (max_offset * max_offset);
 
 	/* Now are we adding modulation to this signal? */
 
@@ -170,6 +179,8 @@ void calculate_tiptilt(void)
 	wfs_aberrations.focus = focus;
 	wfs_aberrations.a1 = a1;
 	wfs_aberrations.a2 = a2;
+	wfs_aberrations.c1 = c1;
+	wfs_aberrations.c2 = c2;
 
 	/* Note that we are using these for mirror position. */
 
@@ -186,6 +197,9 @@ void calculate_tiptilt(void)
 	calc_aberrations.focus += focus;
 	calc_aberrations.a1 += a1;
 	calc_aberrations.a2 += a2;
+	calc_aberrations.c1 += c1;
+	calc_aberrations.c2 += c2;
+	calc_aberrations.flux += total_flux;
 
 	/* 
 	 * For the r0 and residual calculations 
@@ -214,6 +228,12 @@ void calculate_tiptilt(void)
 			calc_aberrations.a1/num_mean_aberrations;
 		wfs_mean_aberrations.a2 = 
 			calc_aberrations.a2/num_mean_aberrations;
+		wfs_mean_aberrations.c1 = 
+			calc_aberrations.c1/num_mean_aberrations;
+		wfs_mean_aberrations.c2 = 
+			calc_aberrations.c2/num_mean_aberrations;
+		wfs_mean_aberrations.flux = 
+			calc_aberrations.flux/num_mean_aberrations;
 
 		/* R0 and residual degtector */
 
@@ -276,6 +296,9 @@ void calculate_tiptilt(void)
 		calc_aberrations.focus = 0.0;
 		calc_aberrations.a1 = 0.0;
 		calc_aberrations.a2 = 0.0;
+		calc_aberrations.c1 = 0.0;
+		calc_aberrations.c2 = 0.0;
+		calc_aberrations.flux = 0.0;
 
 		xtilt2 = 0.0;
 		ytilt2 = 0.0;
@@ -300,7 +323,6 @@ void servo_tiptilt(void)
 {
 	static float	delta_x = 0.0;
 	static float	delta_y = 0.0;
-	float		az, el;
 	float	gain = 0.0;
 
 	/* Now, are we faking out the servo? */
@@ -330,19 +352,26 @@ void servo_tiptilt(void)
 	}
 	else if (wfs_tiptilt_servo.on)
 	{
-	    /* Anything from labao? */
+	    /* Servo is on, do we have enough flux? */
 
-	    current_labao_tiptilt(&az, &el);
-
-	    /* Servo is on */
-
-	    delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx +
-		        wfs_tiptilt_servo.labao_x * az -
+	    if (wfs_mean_aberrations.flux < wfs_tiptilt_servo.min_flux)
+	    {
+		wfs_tiptilt_servo.on = FALSE;
+	        delta_x = 0.0;
+	        delta_y = 0.0;
+	        wfs_tiptilt.correctx = 0.0;
+	        wfs_tiptilt.correcty = 0.0;
+		send_wfs_text_message("Too little flux. Tiptilt SERVO off.");
+		send_tiptilt_servo = TRUE;
+	    } 
+	    else
+	    {
+	        delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx +
 			wfs_tiptilt_servo.damp_x * delta_x;
 	
-	    delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety +
-		        wfs_tiptilt_servo.labao_y * el -
+	        delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety +
 			wfs_tiptilt_servo.damp_y * delta_y;
+	    }
 	}
 	else
 	{
