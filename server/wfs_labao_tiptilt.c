@@ -361,6 +361,7 @@ void *do_labao_tiptilt(void *arg)
 
 		/* Is the servo ON? */
 
+#ifdef MOVE_BOXES_FOR_LABAO_TIPTILT
 		if (wfs_tiptilt_servo.on)
 		{
 		    delta_x =  wfs_tiptilt_servo.labao_x * labao_tiptilt_Az -
@@ -404,6 +405,7 @@ void *do_labao_tiptilt(void *arg)
 		    	subap_centroids_offset.yp[i] = 0;
 		    }
 		}
+#endif
 	}
 
 	return NULL;

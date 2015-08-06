@@ -51,6 +51,7 @@ float data_threshold = -1e32;
 struct s_wfs_tdc_status tdc_status;
 struct s_wfs_subap_centroids subap_centroids_mean;
 struct s_wfs_subap_centroids subap_centroids_ref;
+#warning WE CAN PROBABLY LOOSE THE CENTROIDS_OFFSET
 struct s_wfs_subap_centroids subap_centroids_offset;
 struct s_wfs_subap_centroids subap_centroids;
 struct s_wfs_clamp_fluxes clamp_fluxes;
