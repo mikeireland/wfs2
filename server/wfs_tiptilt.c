@@ -372,11 +372,15 @@ void servo_tiptilt(void)
 		current_labao_tiptilt(&az, &el);
 
 	        delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx +
+#ifndef MOVE_BOXES_FOR_LABAO_TIPTILT
                         wfs_tiptilt_servo.labao_x * az -
+#endif
 			wfs_tiptilt_servo.damp_x * delta_x;
 	
 	        delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety +
+#ifndef MOVE_BOXES_FOR_LABAO_TIPTILT
                         wfs_tiptilt_servo.labao_y * el -
+#endif
 			wfs_tiptilt_servo.damp_y * delta_y;
 	    }
 	}
