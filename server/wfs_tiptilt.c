@@ -323,6 +323,7 @@ void servo_tiptilt(void)
 {
 	static float	delta_x = 0.0;
 	static float	delta_y = 0.0;
+	float		az = 0.0, el = 0.0;
 	float	gain = 0.0;
 
 	/* Now, are we faking out the servo? */
@@ -366,10 +367,16 @@ void servo_tiptilt(void)
 	    } 
 	    else
 	    {
+		/* Anything from labao? */
+
+		current_labao_tiptilt(&az, &el);
+
 	        delta_x = wfs_tiptilt_servo.gain_x * wfs_tiptilt.offsetx +
+                        wfs_tiptilt_servo.labao_x * az -
 			wfs_tiptilt_servo.damp_x * delta_x;
 	
 	        delta_y = wfs_tiptilt_servo.gain_y * wfs_tiptilt.offsety +
+                        wfs_tiptilt_servo.labao_y * el -
 			wfs_tiptilt_servo.damp_y * delta_y;
 	    }
 	}
