@@ -29,8 +29,9 @@
 #ifndef __WFS_CLISERV__
 #define __WFS_CLISERV__
 
+#include <cliserv.h>
 #define SERVER
-
+#undef __CLISERV__
 #include <stdint.h>
 #include <clock.h>
 #include <cliserv.h>
@@ -60,9 +61,9 @@
 #define DFT_ANDOR_VEND			90
 #define DFT_ANDOR_AMPLIFIER		ANDOR_CCD
 #define DFT_ANDOR_PREAMP_GAIN		2
-#define DFT_ANDOR_EM_GAIN		100
+#define DFT_ANDOR_EM_GAIN		30
 #define DFT_ANDOR_TEMPERATURE		-50
-#define DFT_ANDOR_VERTICAL_SPEED	0
+#define DFT_ANDOR_VERTICAL_SPEED	2
 #define DFT_ANDOR_CCD_HORIZONTAL_SPEED	0
 #define DFT_ANDOR_EMCCD_HORIZONTAL_SPEED 0
 #define DFT_ANDOR_EM_ADVANCED		0
@@ -343,4 +344,15 @@ void *do_labao_tiptilt(void *arg);
 void current_labao_tiptilt(float *az, float *el);
 float current_labao_receive_rate(void);
 int     labao_tiptilt_waiting(int fd);
+
+/* wfs_autoalign.c */
+
+int open_telescope_connection(int argc, char **argv);
+int message_telescope_status(int server, struct smessage *mess);
+int message_wfs_start_focus_parabola(struct smessage *message);
+void autoalign_focus_parabola(void);
+int message_wfs_stop_autoalign(struct smessage *message);
+
+
+
 #endif

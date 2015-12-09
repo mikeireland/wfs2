@@ -60,6 +60,7 @@ extern int main_page;
 extern int andor_setup_page;
 extern int wfs_page;
 extern int adjust_page;
+extern int align_page;
 extern int rot_page;
 #endif
 extern GtkWidget *notebook;
@@ -148,6 +149,11 @@ void wfs_set_servo_callback(GtkButton *button, gpointer user_data);
 void wfs_closeloop_message_callback(GtkButton *button, gpointer user_data);
 void wfs_set_send_callback(GtkButton *button, gpointer user_data);
 void update_tiptilt_servo(void);
+
+/* align.c */
+
+void fill_align_page(GtkWidget *vbox);
+void wfs_autoalign_focus_callback(GtkButton *button, gpointer data);
 
 /* adjust.c */
 

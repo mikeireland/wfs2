@@ -490,6 +490,8 @@ int wfs_periodic_job(void)
 			return error(ERROR,"Failed to send mean aberrations.");
 
 		new_mean_aberrations = FALSE;
+
+		autoalign_focus_parabola();
 	}
 
 	/* Is it time to do this? */
@@ -534,11 +536,11 @@ int wfs_periodic_job(void)
 		send_tiptilt_servo = FALSE;
 	    }
 
-	    send_wfs_text_message(
-		"Data mean = %.1f+-%.1f Max = %.1f Min = %.1f", 
-			data_mean,
-			sqrt(data2_mean - data_mean*data_mean),
-			max, maxx, maxy, min, minx, miny);
+	    //send_wfs_text_message(
+		//"Data mean = %.1f+-%.1f Max = %.1f Min = %.1f", 
+			//data_mean,
+			//sqrt(data2_mean - data_mean*data_mean),
+			//max, maxx, maxy, min, minx, miny);
 
 	    /* Yes it is */
 

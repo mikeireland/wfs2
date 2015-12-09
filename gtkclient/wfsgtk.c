@@ -42,6 +42,7 @@ char do_local_display = TRUE;
 int main_page = -1;
 int andor_setup_page = -1;
 int wfs_page = -1;
+int align_page = -1;
 int adjust_page = -1;
 int rot_page = -1;
 #endif
@@ -257,6 +258,20 @@ int main(int  argc, char *argv[] )
         /* And fill things out. */
 
         fill_wfs_page(vbox);
+
+	/* The ALIGN Page */
+
+        vbox = gtk_vbox_new(FALSE, 0);
+        label = gtk_label_new("ALIGN");
+#ifdef GTK2
+        align_page =
+#endif
+                gtk_notebook_append_page((GtkNotebook *)notebook,
+                vbox, label);
+
+        /* And fill things out. */
+
+        fill_align_page(vbox);
 
 	/* The ADJUST Page */
 

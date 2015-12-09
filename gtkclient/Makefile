@@ -50,9 +50,9 @@ all: wfsgtk
 # The user interface
 #
 
-wfsgtk: wfsgtk.o messages.o andor.o wfs.o display.o adjust.o rotation.o
+wfsgtk: wfsgtk.o messages.o andor.o wfs.o display.o adjust.o rotation.o align.o
 	${CC} -o wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o rotation.o\
-		adjust.o $(LFLAGS)
+		adjust.o align.o $(LFLAGS)
 
 wfsgtk.o: wfsgtk.c wfsgtk.h
 	${CC} ${CFLAGS} -c wfsgtk.c
@@ -69,6 +69,9 @@ wfs.o: wfs.c wfsgtk.h
 display.o: display.c wfsgtk.h
 	${CC} ${CFLAGS} -c display.c
 
+align.o: align.c wfsgtk.h
+	${CC} ${CFLAGS} -c align.c
+
 adjust.o: adjust.c wfsgtk.h
 	${CC} ${CFLAGS} -c adjust.c
 
@@ -81,7 +84,7 @@ rotation.o: rotation.c wfsgtk.h
 
 clean:
 	rm -rf core wfsgtk wfsgtk.o messages.o andor.o wfs.o display.o \
-		adjust.o rotation.o
+		adjust.o rotation.o align.o
 
 #
 # install

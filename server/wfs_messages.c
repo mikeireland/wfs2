@@ -105,6 +105,9 @@ void setup_wfs_messages(void)
 	server_add_message_job(WFS_SAVE_TIPTILT, message_wfs_save_tiptilt);
 	server_add_message_job(WFS_SAVE_DATA, message_wfs_save_data);
 	server_add_message_job(WFS_ZERO_TIPTILT, message_wfs_zero_tiptilt);
+	server_add_message_job(WFS_START_FOCUS_PARABOLA, 
+		message_wfs_start_focus_parabola);
+	server_add_message_job(WFS_STOP_AUTOALIGN, message_wfs_stop_autoalign);
 
 } /* setup_wfs_messages() */
 
