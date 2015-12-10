@@ -32,10 +32,18 @@ static int telescope_server = -1;
 static struct s_scope_status telescope_status;
 static int autoalign_focus_count = 0;
 static bool autoalign_focus = FALSE;
+static int autoalign_beacon_count = 0;
+static bool autoalign_beacon = FALSE;
 
 #define FOCUS_STEP 10000
-#define FOCUS_LIMIT 0.02
-#define FOCUS_GAIN 500000
+#define FOCUS_LIMIT 0.05
+#define FOCUS_GAIN 200000
+#define FOCUS_DELAY 5
+
+#define BEACON_STEP 50
+#define BEACON_LIMIT 0.01
+#define BEACON_GAIN 1000
+#define BEACON_DELAY 2
 
 /************************************************************************/
 /* open_telescope_connection()                                          */
@@ -110,6 +118,8 @@ int message_wfs_start_focus_parabola(struct smessage *message)
 
         autoalign_focus_count = *((int *)message->data);
 
+	if (autoalign_beacon) return error(ERROR,"Already autoalinging.");
+
 	if (open_telescope_connection(0, NULL) != NOERROR) return ERROR;
 
 	if (verbose)
@@ -125,7 +135,7 @@ int message_wfs_start_focus_parabola(struct smessage *message)
 
 	return NOERROR;
 
-} /* message_wfs_andor_setup() */
+} /* message_wfs_start_focus_parabola() */
 
 /************************************************************************/
 /* autoalign_focus_parabola()						*/
@@ -145,7 +155,7 @@ void autoalign_focus_parabola(void)
 
 	/* Don't do this too often */
 
-	if (time(NULL) < last_time+3) return;
+	if (time(NULL) < last_time+FOCUS_DELAY) return;
 	last_time = time(NULL);
 
 	/* Are we done? */
@@ -206,6 +216,166 @@ void autoalign_focus_parabola(void)
 } /* align_focus_parabola() */
 
 /************************************************************************/
+/* message_wfs_start_align_beacon()                               	*/
+/*                                                                      */
+/* Begin aligning the beacon to the WFS.				*/
+/************************************************************************/
+
+int message_wfs_start_align_beacon(struct smessage *message)
+{
+        if (message->length != sizeof(int))
+        {
+                return error(ERROR,
+                "Wrong number of data bytes in WFS_START_FOUCS_PARABOLA.");
+        }
+
+        autoalign_beacon_count = *((int *)message->data);
+
+	if (autoalign_focus) return error(ERROR,"Already autoalinging.");
+
+	if (open_telescope_connection(0, NULL) != NOERROR) return ERROR;
+
+	if (verbose)
+	{
+            error(MESSAGE, "Autoalignment of beacon begins. Trys = %d",
+		autoalign_beacon_count);
+	}
+        send_wfs_text_message(
+		"Autoalignment of beacon begins. Trys = %d",
+		autoalign_beacon_count);
+
+	autoalign_beacon = TRUE;
+
+	return NOERROR;
+
+} /* message_wfs_start_align_beacon() */
+
+/************************************************************************/
+/* autoalign_beacon() 							*/
+/*									*/
+/* Tries to align beacon to WFS.					*/
+/************************************************************************/
+
+void autoalign_beacon_to_wfs(void)
+{
+	static time_t last_time = 0;
+	struct smessage mess;
+	struct s_aob_move_motor motor_move;
+
+	/* Need we do anything at all? */
+
+	if (!autoalign_beacon) return;
+
+	/* Don't do this too often */
+
+	if (time(NULL) < last_time+BEACON_DELAY) return;
+	last_time = time(NULL);
+
+	/* Are we done? */
+
+	if (fabs(wfs_mean_aberrations.xtilt) < BEACON_LIMIT ||
+	    fabs(wfs_mean_aberrations.ytilt) < BEACON_LIMIT)
+	{
+		if (verbose)
+		{
+		    error(MESSAGE, "Autoalignment of beacon complete.");
+		}
+		send_wfs_text_message(
+			"Autoalignment of beacon complete.");
+
+		autoalign_beacon = FALSE;
+		autoalign_beacon_count = 0;
+		return;
+	}
+
+	/* Have we tried too many times? */
+
+	if (--autoalign_beacon_count < 0)
+	{
+		if (verbose)
+		{
+		    error(MESSAGE, "Autoalignment of beacon failed.");
+		}
+		send_wfs_text_message(
+			"Autoalignment of beacon failed.");
+
+		autoalign_beacon = FALSE;
+		autoalign_beacon_count = 0;
+		return;
+	}
+
+	/* OK, move things around */
+
+	mess.type = HUT_AOB_MOVE_RELATIVE;
+	mess.length = sizeof(motor_move);
+	mess.data = (unsigned char *)&motor_move;
+
+	/* Do the axis one at a time. */
+
+	if (autoalign_beacon_count%2)
+	{
+	    if (fabs(wfs_mean_aberrations.xtilt) >  BEACON_LIMIT)
+	    {
+		/* Do X */
+
+		if (scope_number == S2)
+			motor_move.motor = AOB_S2_BFLAT_1;
+		else
+			motor_move.motor = AOB_BFLAT_1;
+
+		motor_move.position = BEACON_GAIN * 
+				fabs(wfs_mean_aberrations.xtilt)
+				+ BEACON_STEP;
+
+		if (wfs_mean_aberrations.xtilt < 0) motor_move.position *= -1.0;
+
+		send_message(telescope_server, &mess);
+
+		send_wfs_text_message("Tries %d Xtilt = %.2f Moving X %d.", 
+			autoalign_beacon_count, 
+			wfs_mean_aberrations.xtilt, 
+			motor_move.position);
+	    }
+	    else
+	    {
+		send_wfs_text_message("Tries %d Xtilt OK.", 
+			autoalign_beacon_count); 
+	    }
+
+	    return;
+	}
+
+	/* Do Y */
+
+	if (fabs(wfs_mean_aberrations.ytilt) >  BEACON_LIMIT)
+	{
+		if (scope_number == S2)
+			motor_move.motor = AOB_S2_BFLAT_2;
+		else
+			motor_move.motor = AOB_BFLAT_2;
+
+		motor_move.position = BEACON_GAIN * 
+				fabs(wfs_mean_aberrations.ytilt)
+				+ BEACON_STEP;
+
+		if (wfs_mean_aberrations.ytilt > 0) motor_move.position *= -1.0;
+
+		send_message(telescope_server, &mess);
+
+		send_wfs_text_message("Tries %d Ytilt = %.2f Moving X %d.", 
+			autoalign_beacon_count, 
+			wfs_mean_aberrations.ytilt, 
+			motor_move.position);
+	}
+	else
+	{
+		send_wfs_text_message("Tries %d Ytilt OK.", 
+			autoalign_beacon_count); 
+	}
+
+} /* align_beacon_to_wfs() */
+
+/************************************************************************/
 /* message_wfs_stop_autoalign()  	                                */
 /*                                                                      */
 /* Stop all autoalignment proceedures.					*/
@@ -221,6 +391,8 @@ int message_wfs_stop_autoalign(struct smessage *message)
 
 	autoalign_focus = FALSE;
 	autoalign_focus_count = 0;
+	autoalign_beacon = FALSE;
+	autoalign_beacon_count = 0;
 
 	send_wfs_text_message("All Autoalignment STOPPED.");
 

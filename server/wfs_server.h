@@ -350,7 +350,9 @@ int     labao_tiptilt_waiting(int fd);
 int open_telescope_connection(int argc, char **argv);
 int message_telescope_status(int server, struct smessage *mess);
 int message_wfs_start_focus_parabola(struct smessage *message);
-void autoalign_focus_parabola(void);
+void autoalign_focus_to_wfs(void);
+int message_wfs_start_align_beacon(struct smessage *message);
+void autoalign_beacon_parabola(void);
 int message_wfs_stop_autoalign(struct smessage *message);
 
 

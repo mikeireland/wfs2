@@ -492,6 +492,7 @@ int wfs_periodic_job(void)
 		new_mean_aberrations = FALSE;
 
 		autoalign_focus_parabola();
+		autoalign_beacon_to_wfs();
 	}
 
 	/* Is it time to do this? */
