@@ -138,6 +138,7 @@ extern bool fake_mirror;
 extern float max_radius;
 extern bool new_mean_aberrations;
 extern bool send_tiptilt_servo;
+extern bool include_old_S2_code;
 
 
 /* Prototypes */
@@ -244,6 +245,8 @@ int message_wfs_reset_background(struct smessage *message);
 int message_wfs_set_threshold(struct smessage *message);
 int message_wfs_set_num_frames(struct smessage *message);
 int message_wfs_save_tiptilt(struct smessage *message);
+int message_wfs_save_aberrations(struct smessage *mess);
+void complete_aberrations_record(void);
 void complete_tiptilt_record(void);
 int message_wfs_save_data(struct smessage *message);
 void complete_data_record(void);

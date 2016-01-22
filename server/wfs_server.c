@@ -66,6 +66,7 @@ bool fake_mirror = FALSE;
 float max_radius = 0.0;
 bool new_mean_aberrations = FALSE;
 bool send_tiptilt_servo = FALSE;
+bool include_old_S2_code = FALSE;
 
 int main(int argc, char **argv)
 {
@@ -157,6 +158,9 @@ int main(int argc, char **argv)
 			case 'M': fake_mirror = !fake_mirror;
                                   while(*p != '\0') p++; p--;
                                   break;
+
+                        case 'o': include_old_S2_code = !include_old_S2_code;
+				  break;
 
 			case 'R': if (sscanf(p+1,"%d,%d,%d,%d", 
 					&(image.hstart),
@@ -575,6 +579,10 @@ int wfs_periodic_job(void)
 	/* Or indeed some raw data? */
 
 	complete_data_record();
+
+	/* or some aberration data */
+
+	complete_aberrations_record();
 
 	/* Update the current setup information */
 

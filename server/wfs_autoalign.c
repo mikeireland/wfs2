@@ -196,7 +196,7 @@ void autoalign_focus_parabola(void)
 	mess.length = sizeof(motor_move);
 	mess.data = (unsigned char *)&motor_move;
 
-	if (scope_number == S2)
+	if (include_old_S2_code && scope_number == S2)
 		motor_move.motor = AOB_S2_WFS_PAROB_FOC;
 	else
 		motor_move.motor = AOB_WFS_PAROB_FOC;
@@ -318,7 +318,7 @@ void autoalign_beacon_to_wfs(void)
 	    {
 		/* Do X */
 
-		if (scope_number == S2)
+		if (include_old_S2_code && scope_number == S2)
 			motor_move.motor = AOB_S2_BFLAT_1;
 		else
 			motor_move.motor = AOB_BFLAT_1;
@@ -349,7 +349,7 @@ void autoalign_beacon_to_wfs(void)
 
 	if (fabs(wfs_mean_aberrations.ytilt) >  BEACON_LIMIT)
 	{
-		if (scope_number == S2)
+		if (include_old_S2_code && scope_number == S2)
 			motor_move.motor = AOB_S2_BFLAT_2;
 		else
 			motor_move.motor = AOB_BFLAT_2;

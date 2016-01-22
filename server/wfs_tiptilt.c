@@ -24,6 +24,11 @@
 
 #include "./wfs_server.h"
 
+#define MAX_ABERRATIONS_RECORD      100000
+static int aberrations_record_num = 0;
+static int aberrations_record_count = 0;
+static struct  s_wfs_aberrations aberrations_record[MAX_ABERRATIONS_RECORD];
+
 /************************************************************************/
 /* calculate_tiptilt							*/
 /*									*/
@@ -181,14 +186,26 @@ void calculate_tiptilt(void)
 	wfs_aberrations.a2 = a2;
 	wfs_aberrations.c1 = c1;
 	wfs_aberrations.c2 = c2;
+	wfs_aberrations.time_stamp = chara_time_now();
 
 	/* Note that we are using these for mirror position. */
 
 	wfs_aberrations.det_stddev = wfs_tiptilt.correctx;
 	wfs_aberrations.mir_stddev = wfs_tiptilt.correcty;
-	wfs_aberrations.labao_rate = current_labao_receive_rate();
+	wfs_aberrations.labao_rate =  andor_setup.processed_frames_per_second;
 	wfs_aberrations.r0 = wfs_mean_aberrations.r0;
 	wfs_aberrations.seeing = wfs_mean_aberrations.seeing;
+
+	/* Are we recording these? */
+
+	if (aberrations_record_num > 0 &&
+            aberrations_record_count < aberrations_record_num)
+        {
+                aberrations_record[aberrations_record_count] = 
+			wfs_aberrations;
+
+		aberrations_record_count++;
+	}
 
 	/* Now some means */
 
@@ -424,3 +441,129 @@ void servo_tiptilt(void)
 		send_tiptilt_data(wfs_tiptilt.correctx, wfs_tiptilt.correcty);
 
 } /* servo_tiptilt() */
+
+/************************************************************************/
+/* message_wfs_save_aberrations()					*/
+/*									*/
+/* Allocate memory, setup globals for recording aberrations data.	*/
+/************************************************************************/
+
+int message_wfs_save_aberrations(struct smessage *mess)
+{
+	int	num = 0;
+
+        if (mess->length != sizeof(int))
+        {
+                return error(ERROR,
+                "Wrong number of bytes in WFS_SETUP_ABERRATIONS_RECORD.");
+        }
+
+	/* Are we already recording data? */
+
+	if (aberrations_record_num != 0)
+	{
+		send_wfs_text_message(
+			"We are already recording aberrations data.");
+		return NOERROR;
+	}
+
+	num = *((int *)mess->data);
+
+	if (num <= 0) return NOERROR;
+	if (num > MAX_ABERRATIONS_RECORD) num = MAX_ABERRATIONS_RECORD;
+
+	aberrations_record_count = 0;
+	aberrations_record_num = num;
+
+	send_wfs_text_message(
+		"Trying to save %d aberration measurements", num);
+
+	return NOERROR;
+
+}  /* message_wfs_save_aberrations() */
+
+/************************************************************************/
+/* complete_aberrations_record()					*/
+/*									*/
+/* Should be called periodically to see if there is a complete set	*/
+/* of aberrations data recorded we need to save.			*/
+/************************************************************************/
+
+void complete_aberrations_record(void)
+{
+	int	year, month, day;
+	char	filename[345];
+	char	s[345];
+	FILE	*fp;
+	time_t	now;
+	struct tm *gmt_now;
+	int	i;
+
+	/* Have we finished? */
+
+	if (aberrations_record_num == 0 ||
+	    aberrations_record_count < aberrations_record_num)
+	{
+		return;
+	}
+
+	/* We have data, let's find a good filename */
+
+	time(&now);
+	gmt_now = gmtime(&now);
+	year = gmt_now->tm_year + 1900;
+	month = gmt_now->tm_mon+1;
+	day = gmt_now->tm_mday;
+	
+	if (year < 1950) year+=100; /* Y2K.... */
+
+	for(i=1; i<1000; i++)
+	{
+		sprintf(filename,
+			"%s/%4d_%02d_%02d_%s_wfs_aberrations_%03d.dat",
+			get_data_directory(s), year, month, day, wfs_name, i);
+
+		if ((fp = fopen(filename, "r")) == NULL) break;
+		fclose(fp);
+	}
+
+	if (i > 999) 
+	{
+		error(ERROR,"Too many aberrations files.");
+		return;
+	}
+
+	/* OK, save the data */
+
+	if ((fp = fopen(filename, "w")) == NULL)
+	{
+		error(ERROR, "Failed to open file %s", filename );
+		return;
+	}
+
+	fprintf(fp,"# FILENAME        : %s\n",filename);
+	fprintf(fp,"# GMT YEAR        : %d\n",year);
+	fprintf(fp,"# GMT MONTH       : %d\n",month);
+	fprintf(fp,"# GMT DAY         : %d\n",day);
+	fprintf(fp,
+	"# Time     Tilt X  Tilt Y   Focus    A1      A2      C1     C2\n");
+	
+	for(i=0; i< aberrations_record_num; i++)
+		fprintf(fp,
+		"%9d %7.4f %7.4f %7.4f %7.4f %7.4f %7.4f %7.4f\n",
+			aberrations_record[i].time_stamp,			
+			aberrations_record[i].xtilt,			
+			aberrations_record[i].ytilt,			
+			aberrations_record[i].focus,
+			aberrations_record[i].a1,
+			aberrations_record[i].a2,
+			aberrations_record[i].c1,
+			aberrations_record[i].c2);
+
+	fclose(fp);
+	aberrations_record_num = 0;
+	aberrations_record_count = 0;
+
+	send_wfs_text_message("Saved file %s", filename);
+
+} /* complete_aberrations_record() */
