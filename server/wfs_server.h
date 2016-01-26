@@ -358,6 +358,27 @@ int message_wfs_start_align_beacon(struct smessage *message);
 void autoalign_beacon_parabola(void);
 int message_wfs_stop_autoalign(struct smessage *message);
 
+/* wfs_secondary.c */
 
+int open_mercury_server(void);
+int close_mercury_server(void);
+int message_secondary_servo_on(int server, struct smessage *mess);
+int message_secondary_servo_off(int server, struct smessage *mess);
+bool mercury_servo_is_on(void);
+int message_secondary_position(int server, struct smessage *mess);
+int mercury_stop(void);
+int mercury_abort(void);
+int mercury_servo_on(void);
+int mercury_servo_off(void);
+int mercury_absolute_x(float pos);
+int mercury_absolute_y(float pos);
+int mercury_absolute_z(float pos);
+int mercury_relative_x(float pos);
+int mercury_relative_y(float pos);
+int mercury_relative_z(float pos);
+int mercury_focus(float pos);
+int mercury_tilt_az(float pos);
+int mercury_tilt_el(float pos);
+int mercury_set_position(float x, float y, float z);
 
 #endif

@@ -52,7 +52,8 @@ OFILES= \
 	wfs_labao_tiptilt.o\
 	sh_control.o\
 	sh_messages.o\
-	wfs_autoalign.o
+	wfs_autoalign.o\
+	wfs_secondary.o
 
 #
 # Rule for compiling and adding a unit to the library

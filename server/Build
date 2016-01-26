@@ -6,7 +6,8 @@ if (test $# -eq 0) then
         echo There should at least be one argument......
 else
 
-if [ `cat /proc/version | awk '{print $3}'` = 2.6.32-431.el6.x86_64 ]; then
+if [ `cat /proc/version | awk '{print $3}'` = 2.6.32-573.12.1.el6.x86_64 ]; then
+
 	make -f ./Makefile.s2wfs.chara-array.org $1
 else
 	make -f ./Makefile.other $1
