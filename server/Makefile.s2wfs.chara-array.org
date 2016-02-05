@@ -98,10 +98,13 @@ clean:
 
 install: wfs_server
 	cp wfs_server $(BINDIR)/wfs_server
-	chown observe $(BINDIR)/wfs_server
-	chgrp chara $(BINDIR)/wfs_server
+	chown root $(BINDIR)/wfs_server
+	chgrp root $(BINDIR)/wfs_server
 	chmod a+x $(BINDIR)/wfs_server
 	chmod a+s $(BINDIR)/wfs_server
+	cp run_wfs $(BINDIR)/run_wfs
+	chmod a+rx $(BINDIR)/run_wfs
+
 
 #
 # Rule for uninstalling

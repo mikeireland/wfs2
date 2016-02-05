@@ -30,15 +30,22 @@
 
 static int telescope_server = -1;
 static struct s_scope_status telescope_status;
-static int autoalign_focus_count = 0;
-static bool autoalign_focus = FALSE;
+static int autoalign_parabola_focus_count = 0;
+static bool autoalign_parabola_focus = FALSE;
 static int autoalign_beacon_count = 0;
 static bool autoalign_beacon = FALSE;
+static int autoalign_telescope_focus_count = 0;
+static bool autoalign_telescope_focus = FALSE;
 
-#define FOCUS_STEP 10000
-#define FOCUS_LIMIT 0.05
-#define FOCUS_GAIN 200000
-#define FOCUS_DELAY 5
+#define PARABOLA_FOCUS_STEP 10000
+#define PARABOLA_FOCUS_LIMIT 0.05
+#define PARABOLA_FOCUS_GAIN 200000
+#define PARABOLA_FOCUS_DELAY 5
+
+#define TELESCOPE_FOCUS_STEP 0.0
+#define TELESCOPE_FOCUS_LIMIT 0.05
+#define TELESCOPE_FOCUS_GAIN 0.0
+#define TELESCOPE_FOCUS_DELAY 5
 
 #define BEACON_STEP 50
 #define BEACON_LIMIT 0.01
@@ -103,7 +110,7 @@ int message_telescope_status(int server, struct smessage *mess)
 } /* message_telescope_status() */
 
 /************************************************************************/
-/* message_wfs_start_focus_wfs_parabola()                               */
+/* message_wfs_start_focus_parabola()                                   */
 /*                                                                      */
 /* Begin focusing the parabola sending light to the WFS.		*/
 /************************************************************************/
@@ -116,22 +123,23 @@ int message_wfs_start_focus_parabola(struct smessage *message)
                 "Wrong number of data bytes in WFS_START_FOUCS_PARABOLA.");
         }
 
-        autoalign_focus_count = *((int *)message->data);
+        autoalign_parabola_focus_count = *((int *)message->data);
 
-	if (autoalign_beacon) return error(ERROR,"Already autoalinging.");
+	if (autoalign_beacon || autoalign_telescope_focus) 
+		return error(ERROR,"Already autoaligning.");
 
 	if (open_telescope_connection(0, NULL) != NOERROR) return ERROR;
 
 	if (verbose)
 	{
             error(MESSAGE, "Autoalignment of parabola focus begins. Trys = %d",
-		autoalign_focus_count);
+		autoalign_parabola_focus_count);
 	}
         send_wfs_text_message(
 		"Autoalignment of parabola focus begins. Trys = %d",
-		autoalign_focus_count);
+		autoalign_parabola_focus_count);
 
-	autoalign_focus = TRUE;
+	autoalign_parabola_focus = TRUE;
 
 	return NOERROR;
 
@@ -151,16 +159,16 @@ void autoalign_focus_parabola(void)
 
 	/* Need we do anything at all? */
 
-	if (!autoalign_focus) return;
+	if (!autoalign_parabola_focus) return;
 
 	/* Don't do this too often */
 
-	if (time(NULL) < last_time+FOCUS_DELAY) return;
+	if (time(NULL) < last_time+PARABOLA_FOCUS_DELAY) return;
 	last_time = time(NULL);
 
 	/* Are we done? */
 
-	if (fabs(wfs_mean_aberrations.focus) < FOCUS_LIMIT)
+	if (fabs(wfs_mean_aberrations.focus) < PARABOLA_FOCUS_LIMIT)
 	{
 		if (verbose)
 		{
@@ -169,14 +177,14 @@ void autoalign_focus_parabola(void)
 		send_wfs_text_message(
 			"Autoalignment of parabola focus complete.");
 
-		autoalign_focus = FALSE;
-		autoalign_focus_count = 0;
+		autoalign_parabola_focus = FALSE;
+		autoalign_parabola_focus_count = 0;
 		return;
 	}
 
 	/* Have we tried too many times? */
 
-	if (--autoalign_focus_count < 0)
+	if (--autoalign_parabola_focus_count < 0)
 	{
 		if (verbose)
 		{
@@ -185,8 +193,8 @@ void autoalign_focus_parabola(void)
 		send_wfs_text_message(
 			"Autoalignment of parabola focus failed.");
 
-		autoalign_focus = FALSE;
-		autoalign_focus_count = 0;
+		autoalign_parabola_focus = FALSE;
+		autoalign_parabola_focus_count = 0;
 		return;
 	}
 
@@ -201,15 +209,16 @@ void autoalign_focus_parabola(void)
 	else
 		motor_move.motor = AOB_WFS_PAROB_FOC;
 
-	motor_move.position = FOCUS_GAIN * fabs(wfs_mean_aberrations.focus)
-				+ FOCUS_STEP;
+	motor_move.position = PARABOLA_FOCUS_GAIN * 
+					fabs(wfs_mean_aberrations.focus)
+				+ PARABOLA_FOCUS_STEP;
 
 	if (wfs_mean_aberrations.focus < 0) motor_move.position *= -1.0;
 
 	send_message(telescope_server, &mess);
 
 	send_wfs_text_message("Tries %d Focus = %.2f Moving Focus %d.", 
-		autoalign_focus_count, 
+		autoalign_parabola_focus_count, 
 		wfs_mean_aberrations.focus, 
 		motor_move.position);
 
@@ -231,7 +240,9 @@ int message_wfs_start_align_beacon(struct smessage *message)
 
         autoalign_beacon_count = *((int *)message->data);
 
-	if (autoalign_focus) return error(ERROR,"Already autoalinging.");
+	if (autoalign_parabola_focus || 
+	    autoalign_telescope_focus) 
+		return error(ERROR,"Already autoaligning.");
 
 	if (open_telescope_connection(0, NULL) != NOERROR) return ERROR;
 
@@ -251,7 +262,7 @@ int message_wfs_start_align_beacon(struct smessage *message)
 } /* message_wfs_start_align_beacon() */
 
 /************************************************************************/
-/* autoalign_beacon() 							*/
+/* autoalign_beacon_to_wfs()						*/
 /*									*/
 /* Tries to align beacon to WFS.					*/
 /************************************************************************/
@@ -373,7 +384,111 @@ void autoalign_beacon_to_wfs(void)
 			autoalign_beacon_count); 
 	}
 
-} /* align_beacon_to_wfs() */
+} /* autoalign_beacon_to_wfs() */
+
+/************************************************************************/
+/* message_wfs_start_focus_telescope()                                   */
+/*                                                                      */
+/* Begin focusing the telescope sending starlight to the WFS.		*/
+/************************************************************************/
+
+int message_wfs_start_focus_telescope(struct smessage *message)
+{
+        if (message->length != sizeof(int))
+        {
+                return error(ERROR,
+                "Wrong number of data bytes in WFS_START_FOUCS_TELESCOPE.");
+        }
+
+        autoalign_telescope_focus_count = *((int *)message->data);
+
+	if (autoalign_beacon || autoalign_parabola_focus) 
+		return error(ERROR,"Already autoaligning.");
+
+	if (open_mercury_server() != NOERROR) return ERROR;
+
+	if (verbose)
+	{
+            error(MESSAGE, "Autoalignment of telescope focus begins. Trys = %d",
+		autoalign_telescope_focus_count);
+	}
+        send_wfs_text_message(
+		"Autoalignment of telescope focus begins. Trys = %d",
+		autoalign_telescope_focus_count);
+
+	autoalign_telescope_focus = TRUE;
+
+	return NOERROR;
+
+} /* message_wfs_start_focus_telescope() */
+
+/************************************************************************/
+/* autoalign_focus_telescope()						*/
+/*									*/
+/* Routine that attempts to align the focus of the telescope.		*/
+/************************************************************************/
+
+void autoalign_focus_telescope(void)
+{
+	static time_t last_time = 0;
+	float	      position = 0.0;
+
+	/* Need we do anything at all? */
+
+	if (!autoalign_telescope_focus) return;
+
+	/* Don't do this too often */
+
+	if (time(NULL) < last_time+TELESCOPE_FOCUS_DELAY) return;
+	last_time = time(NULL);
+
+	/* Are we done? */
+
+	if (fabs(wfs_mean_aberrations.focus) < TELESCOPE_FOCUS_LIMIT)
+	{
+		if (verbose)
+		{
+		    error(MESSAGE,"Autoalignment of telescope focus complete.");
+		}
+		send_wfs_text_message(
+			"Autoalignment of telescope focus complete.");
+
+		autoalign_telescope_focus = FALSE;
+		autoalign_telescope_focus_count = 0;
+		return;
+	}
+
+	/* Have we tried too many times? */
+
+	if (--autoalign_telescope_focus_count < 0)
+	{
+		if (verbose)
+		{
+		    error(MESSAGE, "Autoalignment of telescope focus failed.");
+		}
+		send_wfs_text_message(
+			"Autoalignment of telescope focus failed.");
+
+		autoalign_telescope_focus = FALSE;
+		autoalign_telescope_focus_count = 0;
+		return;
+	}
+
+	/* OK, move things around */
+
+	position = TELESCOPE_FOCUS_GAIN * fabs(wfs_mean_aberrations.focus)
+				+ TELESCOPE_FOCUS_STEP;
+
+	if (wfs_mean_aberrations.focus < 0) position *= -1.0;
+
+	mercury_focus(position);
+
+	send_wfs_text_message("Tries %d Focus = %.2f Moving Scope Focus %.1f", 
+		autoalign_telescope_focus_count, 
+		wfs_mean_aberrations.focus, 
+		position);
+
+} /* align_focus_telescope() */
 
 /************************************************************************/
 /* message_wfs_stop_autoalign()  	                                */
@@ -386,13 +501,15 @@ int message_wfs_stop_autoalign(struct smessage *message)
         if (message->length != 0)
         {
                 error(ERROR,
-                "Wrong number of data bytes in WFS_START_FOUCS_PARABOLA.");
+                "Wrong number of data bytes in WFS_STOP_AUTOALIGN.");
 	}
 
-	autoalign_focus = FALSE;
-	autoalign_focus_count = 0;
+	autoalign_parabola_focus = FALSE;
+	autoalign_parabola_focus_count = 0;
 	autoalign_beacon = FALSE;
 	autoalign_beacon_count = 0;
+	autoalign_telescope_focus = FALSE;
+	autoalign_telescope_focus_count = 0;
 
 	send_wfs_text_message("All Autoalignment STOPPED.");
 

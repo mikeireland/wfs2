@@ -154,6 +154,7 @@ void update_tiptilt_servo(void);
 
 void fill_align_page(GtkWidget *vbox);
 void wfs_autoalign_focus_callback(GtkButton *button, gpointer data);
+void wfs_autoalign_scope_callback(GtkButton *button, gpointer data);
 void wfs_autoalign_beacon_callback(GtkButton *button, gpointer data);
 
 /* adjust.c */

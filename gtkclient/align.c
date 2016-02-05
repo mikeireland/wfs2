@@ -51,13 +51,13 @@ void fill_align_page(GtkWidget *vbox)
 
 	label = gtk_label_new("Number of Trys: ");
         gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_widget_set_usize (label, WFS_WIDTH/5, WFS_HEIGHT);
+        gtk_widget_set_usize (label, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(label);
 
 	tries_entry = gtk_entry_new ();
         gtk_entry_set_text (GTK_ENTRY (tries_entry),"50");
         gtk_box_pack_start(GTK_BOX(hbox), tries_entry, TRUE, TRUE, 0);
-        gtk_widget_set_usize (tries_entry, WFS_WIDTH/5, WFS_HEIGHT);
+        gtk_widget_set_usize (tries_entry, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(tries_entry);
 
 	button = gtk_button_new_with_label ("FOCUS WFS");
@@ -65,7 +65,7 @@ void fill_align_page(GtkWidget *vbox)
                 GTK_SIGNAL_FUNC (wfs_autoalign_focus_callback), NULL);
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_container_set_border_width (GTK_CONTAINER(button),1);
-        gtk_widget_set_usize (button, WFS_WIDTH/5, WFS_HEIGHT);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(button);
 
 	button = gtk_button_new_with_label ("ALIGN BEACON");
@@ -73,7 +73,15 @@ void fill_align_page(GtkWidget *vbox)
                 GTK_SIGNAL_FUNC (wfs_autoalign_beacon_callback), NULL);
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_container_set_border_width (GTK_CONTAINER(button),1);
-        gtk_widget_set_usize (button, WFS_WIDTH/5, WFS_HEIGHT);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(button);
+
+	button = gtk_button_new_with_label ("FOCUS SCOPE");
+        gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_autoalign_scope_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER(button),1);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(button);
 
 	button = gtk_button_new_with_label ("STOP ALIGN");
@@ -82,7 +90,7 @@ void fill_align_page(GtkWidget *vbox)
                 (gpointer)(message_array+WFS_STOP_AUTOALIGN));
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_container_set_border_width (GTK_CONTAINER(button),1);
-        gtk_widget_set_usize (button, WFS_WIDTH/5, WFS_HEIGHT);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(button);
 
 	/* Blank space */
@@ -135,6 +143,33 @@ void wfs_autoalign_focus_callback(GtkButton *button, gpointer data)
         }
 
 } /* wfs_autoalign_focus_callback() */
+
+/************************************************************************/
+/* wfs_autoalign_scope_callback()                                       */
+/*                                                                      */
+/* Start auto alignment.                                                */
+/************************************************************************/
+
+void wfs_autoalign_scope_callback(GtkButton *button, gpointer data)
+{
+        struct smessage mess;
+        int     tries;
+        char    *entry;
+
+        entry = (char *)gtk_entry_get_text(GTK_ENTRY(tries_entry));
+        sscanf(entry,"%d", &tries);
+
+        mess.type = WFS_START_FOCUS_TELESCOPE;
+        mess.length = sizeof(int);
+        mess.data = (unsigned char *)&tries;
+
+        if (!send_message(server, &mess))
+        {
+          print_status(ERROR,
+                "Failed to send WFS_START_FOCUS_TELESCOPE message.\n");
+        }
+
+} /* wfs_autoalign_scope_callback() */
 
 /************************************************************************/
 /* wfs_autoalign_beacon_callback()                                       */
