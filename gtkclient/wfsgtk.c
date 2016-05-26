@@ -1052,7 +1052,8 @@ void update_mean_aberrations(void)
         sprintf(s,"C1: %+5.2f", wfs_mean_aberrations.c2);
         gtk_label_set_text((GtkLabel *) c2_label, s);
 
-	sprintf(s,"%5.1f/%5.0f", wfs_mean_aberrations.r0,
+	sprintf(s,"%5.1f/%5.1f%5.0f", wfs_mean_aberrations.r0,
+		wfs_mean_aberrations.flux/WFS_DFT_SUBAP_NUMBER,
 		wfs_mean_aberrations.flux);
         gtk_label_set_text((GtkLabel *) r0_label, s);
 

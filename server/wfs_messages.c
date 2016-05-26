@@ -1008,6 +1008,11 @@ int message_wfs_set_servo(struct smessage *mess)
 	wfs_tiptilt_servo = 
 		*((struct s_wfs_tiptilt_servo *)mess->data);
 
+	if (wfs_tiptilt_servo.on)
+		send_wfs_text_message("Tiptilt SERVO ON");
+	else
+		send_wfs_text_message("Tiptilt SERVO OFF");
+
 	if (server_send_message_all(mess) != NOERROR)
 			error(ERROR,"Failed to send WFS_SET_TIPTILT_SERVO.");
 	return NOERROR;
@@ -1059,12 +1064,16 @@ int message_wfs_closeloop_message(struct smessage *mess)
         }
 
 	if (*((int *)mess->data))
+	{
 		wfs_tiptilt_servo.on = TRUE;
+		send_wfs_text_message("Tiptilt SERVO ON");
+	}
 	else
 	{
 		wfs_tiptilt_servo.on = FALSE;
 		wfs_tiptilt.correctx = 0.0;
 		wfs_tiptilt.correcty = 0.0;
+		send_wfs_text_message("Tiptilt SERVO OFF");
 	}
 	
         message.type = WFS_SET_SERVO;

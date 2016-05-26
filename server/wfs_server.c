@@ -66,6 +66,7 @@ bool fake_mirror = FALSE;
 float max_radius = 0.0;
 bool new_mean_aberrations = FALSE;
 bool send_tiptilt_servo = FALSE;
+#warning OBSOLETE - REMOVE THIS
 bool include_old_S2_code = FALSE;
 
 int main(int argc, char **argv)

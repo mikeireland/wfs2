@@ -236,7 +236,7 @@ void fill_adjust_page(GtkWidget *vbox)
         gtk_widget_set_usize (label, WFS_WIDTH/9, WFS_HEIGHT);
         gtk_widget_show(label);
 
-  	adjustment = gtk_adjustment_new(0.0, 0, 500, 0.1, 0,0);
+  	adjustment = gtk_adjustment_new(0.0, 0, 5000, 0.1, 0,0);
   	entry_min_flux_subap = gtk_spin_button_new(
 		(GtkAdjustment *)adjustment,0.1,1);
   	gtk_box_pack_start(GTK_BOX(hbox), entry_min_flux_subap, 

@@ -331,6 +331,7 @@ void calculate_centroids()
 	    }
 	    else if (flux < clamp_fluxes.clamp_flux_subap)
 	    {
+#warning THIS HAS YET TO BE TESTED
 		subap_centroids.x[subap] /= clamp_fluxes.denom_clamp_subap * 
 						andor_setup.em_gain;
 		subap_centroids.y[subap] /= clamp_fluxes.denom_clamp_subap * 

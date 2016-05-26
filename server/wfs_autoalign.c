@@ -37,9 +37,9 @@ static bool autoalign_beacon = FALSE;
 static int autoalign_telescope_focus_count = 0;
 static bool autoalign_telescope_focus = FALSE;
 
-#define PARABOLA_FOCUS_STEP 10000
+#define PARABOLA_FOCUS_STEP 2000
 #define PARABOLA_FOCUS_LIMIT 0.05
-#define PARABOLA_FOCUS_GAIN 200000
+#define PARABOLA_FOCUS_GAIN 40000
 #define PARABOLA_FOCUS_DELAY 5
 
 #define TELESCOPE_FOCUS_STEP 0.0
@@ -49,7 +49,7 @@ static bool autoalign_telescope_focus = FALSE;
 
 #define BEACON_STEP 50
 #define BEACON_LIMIT 0.01
-#define BEACON_GAIN 1000
+#define BEACON_GAIN 2000
 #define BEACON_DELAY 2
 
 /************************************************************************/
@@ -330,9 +330,9 @@ void autoalign_beacon_to_wfs(void)
 		/* Do X */
 
 		if (include_old_S2_code && scope_number == S2)
-			motor_move.motor = AOB_S2_BFLAT_1;
+			motor_move.motor = AOB_S2_BFLAT_2;
 		else
-			motor_move.motor = AOB_BFLAT_1;
+			motor_move.motor = AOB_BFLAT_2;
 
 		motor_move.position = BEACON_GAIN * 
 				fabs(wfs_mean_aberrations.xtilt)
@@ -361,9 +361,9 @@ void autoalign_beacon_to_wfs(void)
 	if (fabs(wfs_mean_aberrations.ytilt) >  BEACON_LIMIT)
 	{
 		if (include_old_S2_code && scope_number == S2)
-			motor_move.motor = AOB_S2_BFLAT_2;
+			motor_move.motor = AOB_S2_BFLAT_1;
 		else
-			motor_move.motor = AOB_BFLAT_2;
+			motor_move.motor = AOB_BFLAT_1;
 
 		motor_move.position = BEACON_GAIN * 
 				fabs(wfs_mean_aberrations.ytilt)
