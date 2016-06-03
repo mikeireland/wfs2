@@ -499,6 +499,7 @@ int wfs_periodic_job(void)
 		autoalign_focus_parabola();
 		autoalign_beacon_to_wfs();
 		autoalign_focus_telescope();
+		autoalign_boxes_to_wfs();
 	}
 
 	/* Is it time to do this? */

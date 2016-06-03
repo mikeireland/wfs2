@@ -25,8 +25,8 @@
 /* Date   : April 2009							*/
 /************************************************************************/
 
-#include <chara_messages.h>
 #include <cliserv.h>
+#include <chara_messages.h>
 #include <chara.h>
 #include <cliserv_clock.h>
 #include <astrogtk.h>
@@ -85,6 +85,7 @@ extern bool plot_aber;
 extern struct s_wfs_aberrations wfs_mean_aberrations;
 extern struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
 extern scope aber_scope;
+extern int streak_mode;
 
 /* Prototypes */
 
@@ -156,6 +157,8 @@ void fill_align_page(GtkWidget *vbox);
 void wfs_autoalign_focus_callback(GtkButton *button, gpointer data);
 void wfs_autoalign_scope_callback(GtkButton *button, gpointer data);
 void wfs_autoalign_beacon_callback(GtkButton *button, gpointer data);
+void wfs_autoalign_boxes_callback(GtkButton *button, gpointer data);
+void wfs_toggle_streak_callback(GtkButton *button, gpointer data);
 
 /* adjust.c */
 
@@ -176,6 +179,8 @@ void tiptilt_modulation_callback(GtkButton *button, gpointer user_data);
 int message_wfs_andor_current_frame(int server, struct smessage *mess);
 void clear_picture_callback(GtkButton *button, gpointer user_data);
 void toggle_movie_running_callback(GtkButton *button, gpointer user_data);
+void wfs_toggle_center_callback(GtkButton *button, gpointer user_data);
+void wfs_toggle_cog_callback(GtkButton *button, gpointer user_data);
 void wfs_set_clamp_fluxes_callback(GtkButton *button, gpointer signal);
 void do_tt_display(void);
 void clear_tt_display(void);

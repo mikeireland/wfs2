@@ -111,6 +111,8 @@ void setup_wfs_messages(void)
 		message_wfs_start_focus_telescope);
 	server_add_message_job(WFS_START_ALIGN_BEACON, 
 		message_wfs_start_align_beacon);
+	server_add_message_job(WFS_START_ALIGN_BOXES, 
+		message_wfs_start_align_boxes);
 	server_add_message_job(WFS_STOP_AUTOALIGN, message_wfs_stop_autoalign);
 
 } /* setup_wfs_messages() */

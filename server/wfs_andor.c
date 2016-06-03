@@ -682,6 +682,10 @@ int andor_setup_camera(struct s_wfs_andor_setup setup)
 		return ERROR;
 	}
 
+	/* By default the number of samples is enough for 1 second */
+
+	num_mean_aberrations = (int)(1.0 / setup.exposure_time + 0.5);
+	
 	/* Set Kinetic Cycle time to the smallest possible value */
 
 	error(MESSAGE, "Andor: Setting Kinetic Cycle time to minimum..");

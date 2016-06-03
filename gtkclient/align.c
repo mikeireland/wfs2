@@ -76,6 +76,14 @@ void fill_align_page(GtkWidget *vbox)
         gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(button);
 
+	button = gtk_button_new_with_label ("ALIGN BOXES");
+        gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_autoalign_boxes_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER(button),1);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(button);
+
 	button = gtk_button_new_with_label ("FOCUS SCOPE");
         gtk_signal_connect (GTK_OBJECT (button), "clicked",
                 GTK_SIGNAL_FUNC (wfs_autoalign_scope_callback), NULL);
@@ -93,9 +101,52 @@ void fill_align_page(GtkWidget *vbox)
         gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
         gtk_widget_show(button);
 
+	hbox = gtk_hbox_new(FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
+	gtk_widget_show(hbox);
+
+	button = gtk_button_new_with_label ("TOG STREAK");
+        gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_toggle_streak_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER(button),1);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(button);
+
+	button = gtk_button_new_with_label ("TOG CENTER");
+        gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_toggle_center_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER(button),1);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(button);
+
+	button = gtk_button_new_with_label ("TOG COG");
+        gtk_signal_connect (GTK_OBJECT (button), "clicked",
+                GTK_SIGNAL_FUNC (wfs_toggle_cog_callback), NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_container_set_border_width (GTK_CONTAINER(button),1);
+        gtk_widget_set_usize (button, WFS_WIDTH/6, WFS_HEIGHT);
+        gtk_widget_show(button);
+
+	label = gtk_label_new("");
+	gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+	gtk_widget_set_usize (label, WFS_WIDTH/6, WFS_HEIGHT);
+	gtk_widget_show(label);
+
+	label = gtk_label_new("");
+	gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+	gtk_widget_set_usize (label, WFS_WIDTH/6, WFS_HEIGHT);
+	gtk_widget_show(label);
+
+	label = gtk_label_new("");
+	gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+	gtk_widget_set_usize (label, WFS_WIDTH/6, WFS_HEIGHT);
+	gtk_widget_show(label);
+
 	/* Blank space */
 
-	for(i=0; i<6; i++)
+	for(i=0; i<5; i++)
 	{
 		hbox = gtk_hbox_new(FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
@@ -197,3 +248,42 @@ void wfs_autoalign_beacon_callback(GtkButton *button, gpointer data)
         }
 
 } /* wfs_autoalign_beacon_callback() */
+
+/************************************************************************/
+/* wfs_toggle_streak_callback()                                         */
+/*                                                                      */
+/* Start auto alignment.                                                */
+/************************************************************************/
+
+void wfs_toggle_streak_callback(GtkButton *button, gpointer data)
+{
+	streak_mode = ! streak_mode;
+
+} /* wfs_toggle_streak_callback() */
+
+/************************************************************************/
+/* wfs_autoalign_boxes_callback()                                       */
+/*                                                                      */
+/* Start auto alignment.                                                */
+/************************************************************************/
+
+void wfs_autoalign_boxes_callback(GtkButton *button, gpointer data)
+{
+        struct smessage mess;
+        int     tries;
+        char    *entry;
+
+        entry = (char *)gtk_entry_get_text(GTK_ENTRY(tries_entry));
+        sscanf(entry,"%d", &tries);
+
+        mess.type = WFS_START_ALIGN_BOXES;
+        mess.length = sizeof(int);
+        mess.data = (unsigned char *)&tries;
+
+        if (!send_message(server, &mess))
+        {
+          print_status(ERROR,
+                "Failed to send WFS_START_ALIGN_BOXES message.\n");
+        }
+
+} /* wfs_autoalign_boxes_callback() */

@@ -76,6 +76,7 @@ bool plot_aber = FALSE;
 struct s_wfs_aberrations wfs_mean_aberrations;
 struct s_wfs_tiptilt_servo wfs_tiptilt_servo;
 scope aber_scope;
+int streak_mode = FALSE;
 
 int main(int  argc, char *argv[] )
 {

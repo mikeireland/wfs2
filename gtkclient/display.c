@@ -43,6 +43,9 @@ static struct tt_display_struct {
         int             *di,*dj,*mi,*mj;
         Window          theWindow;
                              } tt_display;
+static int center_x = -1;
+static int center_y = -1;
+static bool show_cog = FALSE;
 
 /************************************************************************/
 /* message_wfs_andor_current_frame()                                    */
@@ -60,6 +63,7 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	char	*pc1, *pc2;
 	float	x, y, max, min;
 	int	pixmult = 1;
+	float	cog_x, cog_y, cog_total;
 
 	/* Do we do anything at all? */
 
@@ -158,8 +162,20 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 
 	/* Copy the data, J inverted for display reasons */
 
-	for(pf1 = uncompressed_values, i = 1; i <= andor_setup.npixx; i++)
-	for(j = 1; j <= andor_setup.npixy; j++) values[i][j] = *pf1++;
+	if (streak_mode)
+	{
+	  for(pf1 = uncompressed_values, i = 1; i <= andor_setup.npixx; i++)
+	  {
+	    for(j = 1; j <= andor_setup.npixy; j++) values[i][j] += *pf1++;
+	  }
+	}
+	else
+	{
+	  for(pf1 = uncompressed_values, i = 1; i <= andor_setup.npixx; i++)
+	  {
+	    for(j = 1; j <= andor_setup.npixy; j++) values[i][j] = *pf1++;
+	  }
+	}
 
 	/* OK, finished with the memory */
 
@@ -176,7 +192,8 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
 	if (!picture_window_up)
 	{
 		picture_window = openWindow(server_name,
-			theWidth-andor_setup.npixx*pixmult-30 ,5,
+			theWidth-andor_setup.npixx*pixmult-30 ,
+			theHeight-andor_setup.npixy*pixmult-50,
 			andor_setup.npixx*pixmult, andor_setup.npixy*pixmult);
 		picture_window_up = TRUE;
 	}
@@ -220,6 +237,52 @@ int message_wfs_andor_current_frame(int server, struct smessage *mess)
                         (andor_setup.npixy - subap_centroids.y[i] + 
 			1.0)*pixmult, -1,PLOT_RED);
 	    }
+	}
+
+	/* Show center? */
+
+	if (center_x >= 0 && center_y >= 0)
+	{
+		overlay_line(andor_setup.npixx*pixmult,
+                        andor_setup.npixy*pixmult, picture,
+			center_x - 3*pixmult - 1, 
+			andor_setup.npixy*pixmult - center_y, 6*pixmult,
+			1, TRUE, PLOT_DARK_BLUE);
+		overlay_line(andor_setup.npixx*pixmult,
+                        andor_setup.npixy*pixmult, picture,
+			center_x - 1, 
+			andor_setup.npixy*pixmult - center_y - 3 * pixmult, 
+			6*pixmult, 1, FALSE, PLOT_DARK_BLUE);
+	}
+
+	/* COG? */
+
+	if (show_cog)
+	{
+		cog_x = 0.0;
+		cog_y = 0.0;
+		cog_total = 0.0;
+
+	  	for(i = 1; i <= andor_setup.npixx; i++)
+	        for(j = 1; j <= andor_setup.npixy; j++)
+		{
+			cog_x += ((float)i * values[i][j]);
+			cog_y += ((float)j * values[i][j]);
+			cog_total += values[i][j];
+		}
+		cog_x /= cog_total;
+		cog_y /= cog_total;
+
+		overlay_line(andor_setup.npixx*pixmult,
+                        andor_setup.npixy*pixmult, picture,
+			(cog_x - 4) * pixmult, 
+			(andor_setup.npixy - cog_y) * pixmult,  6*pixmult,
+			1, TRUE, PLOT_PURPLE);
+		overlay_line(andor_setup.npixx*pixmult,
+                        andor_setup.npixy*pixmult, picture,
+			(cog_x - 1)* pixmult, 
+			(andor_setup.npixy - cog_y - 3) * pixmult, 
+			6*pixmult, 1, FALSE, PLOT_PURPLE);
 	}
 
 	XPutImage(theDisplay,picture_window,theGC, picture_image,0,0,0,0,
@@ -632,3 +695,49 @@ void clear_tt_display(void)
         tt_display_window_up = FALSE;
 
 } /* clear_tt_display() */
+
+/************************************************************************/
+/* wfs_toggle_center_callback()						*/
+/*									*/
+/* Marks the center with a blue cross.					*/
+/************************************************************************/
+
+void wfs_toggle_center_callback(GtkButton *button, gpointer user_data)
+{
+	int	x, y;
+
+	/* Are we turning it off? */
+
+	if (center_x >= 0 && center_y > 0)
+	{
+		center_x = -1;
+		center_y = -1;
+		return;
+	}
+	
+	/* We are turning it on then */
+
+	if (!picture_window_up) return;
+
+	if (!get_mouse(picture_window, 1, &x, &y))
+	{
+                print_status(ERROR, "Failed to get mouse data.\n");
+		return;
+	}
+
+	center_x = x;
+	center_y = y;
+
+} /* wfs_toggle_center_callback() */
+
+/************************************************************************/
+/* wfs_toggle_cog_callback()						*/
+/*									*/
+/* Marks the cog with a purple cross.					*/
+/************************************************************************/
+
+void wfs_toggle_cog_callback(GtkButton *button, gpointer user_data)
+{
+	show_cog = !show_cog;
+
+} /* wfs_toggle_cog_callback() */

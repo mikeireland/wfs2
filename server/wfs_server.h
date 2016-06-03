@@ -358,6 +358,9 @@ int message_wfs_start_align_beacon(struct smessage *message);
 void autoalign_beacon_to_wfs(void);
 int message_wfs_start_focus_telescope(struct smessage *message);
 void autoalign_focus_telescope(void);
+int message_wfs_start_align_boxes(struct smessage *message);
+void autoalign_boxes_to_wfs(void);
+int message_wfs_start_align_boxes(struct smessage *message);
 int message_wfs_stop_autoalign(struct smessage *message);
 
 /* wfs_secondary.c */

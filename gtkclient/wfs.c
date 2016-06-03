@@ -44,6 +44,7 @@ static GtkWidget *entry_damp_x = NULL;
 static GtkWidget *entry_gain_y = NULL;
 static GtkWidget *entry_labao_y = NULL;
 static GtkWidget *entry_damp_y = NULL;
+static GtkWidget *entry_aber_disp = NULL;
 static GtkWidget *servo_label = NULL;
 static GtkWidget *send_label = NULL;
 
